@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
     Alert,
@@ -66,6 +66,7 @@ const initialProducts: Product[] = [
 ];
 
 export default function Inicio() {
+  const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category>("Todos");
@@ -213,15 +214,33 @@ export default function Inicio() {
         )}
 
         <View style={styles.linksRow}>
-          <Link href="/formulario" style={styles.link}>
-            Formulario
-          </Link>
-          <Link href="/imagenes" style={styles.link}>
-            Galería
-          </Link>
-          <Link href="/contacto" style={styles.link}>
-            Contacto
-          </Link>
+          <Pressable
+            style={({ pressed }) => [
+              styles.linkButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.push("/formulario")}
+          >
+            <Text style={styles.linkButtonText}>Formulario</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.linkButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.push("/imagenes")}
+          >
+            <Text style={styles.linkButtonText}>Galería</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.linkButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.push("/contacto")}
+          >
+            <Text style={styles.linkButtonText}>Contacto</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -387,10 +406,30 @@ const styles = StyleSheet.create({
   empty: { color: "#756B5D", textAlign: "center", padding: 20 },
   linksRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 8,
+    gap: 10,
+    marginTop: 8,
+    marginHorizontal: 4,
+    paddingVertical: 4,
+    alignSelf: "stretch",
   },
-  link: { color: "#846B46", fontWeight: "800" },
+  linkButton: {
+    flex: 1,
+    flexBasis: 0,
+    minHeight: 44,
+    backgroundColor: "#846B46",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  linkButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  pressed: { opacity: 0.75 },
   modalBackground: {
     flex: 1,
     justifyContent: "flex-end",
