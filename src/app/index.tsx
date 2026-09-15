@@ -11,34 +11,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const menuOptions = [
   {
-    icon: "📝",
     title: "Formulario",
-    description: "Registra tus datos para continuar",
     route: "/formulario" as const,
   },
   {
-    icon: "🖼️",
     title: "Galería",
-    description: "Explora imágenes e inspiración",
     route: "/imagenes" as const,
   },
   {
-    icon: "📍",
     title: "Contacto",
-    description: "Conoce la información del proyecto",
     route: "/contacto" as const,
   },
 ];
 
 function OpcionMenu({
-  icon,
   title,
-  description,
   onPress,
 }: {
-  icon: string;
   title: string;
-  description: string;
   onPress: () => void;
 }) {
   return (
@@ -47,14 +37,7 @@ function OpcionMenu({
       onPress={onPress}
       style={({ pressed }) => [styles.menuCard, pressed && styles.pressed]}
     >
-      <View style={styles.iconBox}>
-        <Text style={styles.icon}>{icon}</Text>
-      </View>
-      <View style={styles.menuInfo}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        <Text style={styles.menuDescription}>{description}</Text>
-      </View>
-      <Text style={styles.arrow}>›</Text>
+      <Text style={styles.menuTitle}>{title}</Text>
     </Pressable>
   );
 }
@@ -107,9 +90,7 @@ export default function Inicio() {
           {menuOptions.map((option) => (
             <OpcionMenu
               key={option.title}
-              icon={option.icon}
               title={option.title}
-              description={option.description}
               onPress={() => router.push(option.route)}
             />
           ))}
@@ -189,26 +170,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 14,
-    flexDirection: "column",
+    minHeight: 76,
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: "#F2D5E0",
   },
-  iconBox: { backgroundColor: "#F8E8EE", borderRadius: 14, padding: 12 },
-  icon: { fontSize: 23 },
-  menuInfo: { width: "100%", alignItems: "center", marginTop: 10 },
   menuTitle: {
     color: "#563C46",
     fontSize: 14,
     fontWeight: "800",
     textAlign: "center",
   },
-  menuDescription: {
-    color: "#8A727C",
-    marginTop: 4,
-    fontSize: 11,
-    textAlign: "center",
-  },
-  arrow: { color: "#C96A8B", fontSize: 24, lineHeight: 24, marginTop: 8 },
   pressed: { opacity: 0.72 },
 });
