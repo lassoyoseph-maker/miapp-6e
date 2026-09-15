@@ -1,98 +1,196 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from "expo-router";
+import {
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+const menuOptions = [
+  {
+    icon: "📝",
+    title: "Formulario",
+    description: "Registra tus datos para continuar",
+    route: "/formulario" as const,
+  },
+  {
+    icon: "🖼️",
+    title: "Galería",
+    description: "Explora imágenes e inspiración",
+    route: "/imagenes" as const,
+  },
+  {
+    icon: "📍",
+    title: "Contacto",
+    description: "Conoce la información del proyecto",
+    route: "/contacto" as const,
+  },
+];
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+function OpcionMenu({
+  icon,
+  title,
+  description,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  onPress: () => void;
+}) {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.menuCard, pressed && styles.pressed]}
+    >
+      <View style={styles.iconBox}>
+        <Text style={styles.icon}>{icon}</Text>
+      </View>
+      <View style={styles.menuInfo}>
+        <Text style={styles.menuTitle}>{title}</Text>
+        <Text style={styles.menuDescription}>{description}</Text>
+      </View>
+      <Text style={styles.arrow}>›</Text>
+    </Pressable>
   );
 }
 
-export default function HomeScreen() {
+export default function Inicio() {
+  const router = useRouter();
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.hero}>
+          <Image
+            source={require("@/assets/inicio.jpg")}
+            style={styles.heroImage}
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+          <View style={styles.heroOverlay}>
+            <Text style={styles.eyebrow}>COFFEE APP</Text>
+            <Text style={styles.heroTitle}>Coffee House</Text>
+            <Text style={styles.heroSubtitle}>
+              Descubre aromas, sabores y experiencias alrededor del café.
+            </Text>
+          </View>
+        </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <View style={styles.welcome}>
+          <View>
+            <Text style={styles.welcomeTitle}>Hola, amante del café</Text>
+            <Text style={styles.welcomeText}>¿Qué deseas explorar hoy?</Text>
+          </View>
+          <Text style={styles.coffeeIcon}>☕</Text>
+        </View>
+
+        <View style={styles.summary}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNumber}>3</Text>
+            <Text style={styles.summaryLabel}>Secciones</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNumber}>100%</Text>
+            <Text style={styles.summaryLabel}>Experiencia</Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Explora la aplicación</Text>
+        {menuOptions.map((option) => (
+          <OpcionMenu
+            key={option.title}
+            icon={option.icon}
+            title={option.title}
+            description={option.description}
+            onPress={() => router.push(option.route)}
+          />
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+  safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
+  container: { padding: 20, gap: 16 },
+  hero: { height: 240, overflow: "hidden", borderRadius: 22 },
+  heroImage: { width: "100%", height: "100%" },
+  heroOverlay: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: "flex-end",
+    padding: 22,
+    backgroundColor: "rgba(43, 24, 18, 0.42)",
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  eyebrow: {
+    color: "#F7D9B5",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.5,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontWeight: "800",
+    marginTop: 5,
   },
-  title: {
-    textAlign: 'center',
+  heroSubtitle: {
+    color: "#FFF7F0",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
   },
-  code: {
-    textTransform: 'uppercase',
+  welcome: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#F2D5E0",
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  welcomeTitle: { color: "#6C4051", fontSize: 18, fontWeight: "800" },
+  welcomeText: { color: "#8A727C", marginTop: 5 },
+  coffeeIcon: { fontSize: 34 },
+  summary: {
+    backgroundColor: "#F8E8EE",
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
   },
+  summaryItem: { alignItems: "center", minWidth: 110 },
+  summaryNumber: { color: "#6C4051", fontSize: 22, fontWeight: "800" },
+  summaryLabel: { color: "#8A727C", marginTop: 3 },
+  divider: { width: 1, height: 34, backgroundColor: "#E0B8C6" },
+  sectionTitle: {
+    color: "#563C46",
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+  menuCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#F2D5E0",
+  },
+  iconBox: { backgroundColor: "#F8E8EE", borderRadius: 14, padding: 12 },
+  icon: { fontSize: 23 },
+  menuInfo: { flex: 1, marginLeft: 14 },
+  menuTitle: { color: "#563C46", fontSize: 16, fontWeight: "800" },
+  menuDescription: { color: "#8A727C", marginTop: 4, fontSize: 13 },
+  arrow: { color: "#C96A8B", fontSize: 30, marginLeft: 8 },
+  pressed: { opacity: 0.72 },
 });
