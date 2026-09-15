@@ -103,15 +103,17 @@ export default function Inicio() {
         </View>
 
         <Text style={styles.sectionTitle}>Explora la aplicación</Text>
-        {menuOptions.map((option) => (
-          <OpcionMenu
-            key={option.title}
-            icon={option.icon}
-            title={option.title}
-            description={option.description}
-            onPress={() => router.push(option.route)}
-          />
-        ))}
+        <View style={styles.menuGrid}>
+          {menuOptions.map((option) => (
+            <OpcionMenu
+              key={option.title}
+              icon={option.icon}
+              title={option.title}
+              description={option.description}
+              onPress={() => router.push(option.route)}
+            />
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -177,20 +179,36 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 4,
   },
+  menuGrid: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "stretch",
+  },
   menuCard: {
+    flex: 1,
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 14,
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#F2D5E0",
   },
   iconBox: { backgroundColor: "#F8E8EE", borderRadius: 14, padding: 12 },
   icon: { fontSize: 23 },
-  menuInfo: { flex: 1, marginLeft: 14 },
-  menuTitle: { color: "#563C46", fontSize: 16, fontWeight: "800" },
-  menuDescription: { color: "#8A727C", marginTop: 4, fontSize: 13 },
-  arrow: { color: "#C96A8B", fontSize: 30, marginLeft: 8 },
+  menuInfo: { width: "100%", alignItems: "center", marginTop: 10 },
+  menuTitle: {
+    color: "#563C46",
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  menuDescription: {
+    color: "#8A727C",
+    marginTop: 4,
+    fontSize: 11,
+    textAlign: "center",
+  },
+  arrow: { color: "#C96A8B", fontSize: 24, lineHeight: 24, marginTop: 8 },
   pressed: { opacity: 0.72 },
 });
