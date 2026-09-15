@@ -1,49 +1,133 @@
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
+import { useMemo, useState } from "react";
 import {
+    Alert,
     Image,
+    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const menuOptions = [
+type Category = "Todos" | "Muebles" | "Arte" | "Relojes" | "Decoración";
+type Product = {
+  id: number;
+  name: string;
+  category: Exclude<Category, "Todos">;
+  price: string;
+  period: string;
+  image: string;
+};
+
+const categories: Category[] = [
+  "Todos",
+  "Muebles",
+  "Arte",
+  "Relojes",
+  "Decoración",
+];
+const initialProducts: Product[] = [
   {
-    title: "Formulario",
-    route: "/formulario" as const,
+    id: 1,
+    name: "Sillón francés de terciopelo",
+    category: "Muebles",
+    price: "$1.280.000",
+    period: "Años 50",
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900",
   },
   {
-    title: "Galería",
-    route: "/imagenes" as const,
+    id: 2,
+    name: "Reloj de bolsillo mecánico",
+    category: "Relojes",
+    price: "$780.000",
+    period: "Años 20",
+    image: "https://images.unsplash.com/photo-1612817288484-6f916006741a?w=900",
   },
   {
-    title: "Contacto",
-    route: "/contacto" as const,
+    id: 3,
+    name: "Jarrón cerámico artesanal",
+    category: "Decoración",
+    price: "$460.000",
+    period: "Años 70",
+    image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=900",
+  },
+  {
+    id: 4,
+    name: "Grabado botánico enmarcado",
+    category: "Arte",
+    price: "$620.000",
+    period: "Siglo XIX",
+    image: "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900",
   },
 ];
 
-function OpcionMenu({
-  title,
-  onPress,
-}: {
-  title: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.menuCard, pressed && styles.pressed]}
-    >
-      <Text style={styles.menuTitle}>{title}</Text>
-    </Pressable>
-  );
-}
-
 export default function Inicio() {
-  const router = useRouter();
+  const [products, setProducts] = useState(initialProducts);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<Category>("Todos");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showSellForm, setShowSellForm] = useState(false);
+  const [buyerName, setBuyerName] = useState("");
+  const [buyerPhone, setBuyerPhone] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+
+  const visibleProducts = useMemo(() => {
+    const text = search.trim().toLowerCase();
+    return products.filter((product) => {
+      const matchesCategory =
+        category === "Todos" || product.category === category;
+      const matchesSearch =
+        !text ||
+        `${product.name} ${product.period}`.toLowerCase().includes(text);
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, search, category]);
+
+  function closePurchase() {
+    setSelectedProduct(null);
+    setBuyerName("");
+    setBuyerPhone("");
+  }
+
+  function confirmPurchase() {
+    if (!buyerName.trim() || !buyerPhone.trim()) {
+      Alert.alert("Datos incompletos", "Escribe tu nombre y teléfono.");
+      return;
+    }
+    Alert.alert(
+      "Solicitud enviada",
+      `Gracias, ${buyerName.trim()}. Te contactaremos pronto.`,
+    );
+    closePurchase();
+  }
+
+  function publishProduct() {
+    if (!newName.trim() || !newPrice.trim()) {
+      Alert.alert("Datos incompletos", "Escribe el nombre y el precio.");
+      return;
+    }
+    setProducts((current) => [
+      {
+        id: Date.now(),
+        name: newName.trim(),
+        category: "Decoración",
+        price: `$${newPrice.trim()}`,
+        period: "Por verificar",
+        image:
+          "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900",
+      },
+      ...current,
+    ]);
+    setNewName("");
+    setNewPrice("");
+    setShowSellForm(false);
+    Alert.alert("Artículo publicado", "El artículo ya aparece en el catálogo.");
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
@@ -51,136 +135,303 @@ export default function Inicio() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
-          <Image
-            source={require("@/assets/inicio.jpg")}
-            style={styles.heroImage}
-          />
-          <View style={styles.heroOverlay}>
-            <Text style={styles.eyebrow}>COFFEE APP</Text>
-            <Text style={styles.heroTitle}>Coffee House</Text>
-            <Text style={styles.heroSubtitle}>
-              Descubre aromas, sabores y experiencias alrededor del café.
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.eyebrow}>COMPRA Y VENDE CON HISTORIA</Text>
+            <Text style={styles.title}>La Vitrina</Text>
+            <Text style={styles.subtitle}>
+              Artículos antiguos para nuevos hogares.
             </Text>
           </View>
+          <Pressable
+            style={styles.sellButton}
+            onPress={() => setShowSellForm(true)}
+          >
+            <Text style={styles.sellButtonText}>+ Vender</Text>
+          </Pressable>
         </View>
 
-        <View style={styles.welcome}>
-          <View>
-            <Text style={styles.welcomeTitle}>Hola, amante del café</Text>
-            <Text style={styles.welcomeText}>¿Qué deseas explorar hoy?</Text>
-          </View>
-          <Text style={styles.coffeeIcon}>☕</Text>
-        </View>
+        <TextInput
+          style={styles.search}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Buscar por nombre o época..."
+          placeholderTextColor="#958A7E"
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filters}
+        >
+          {categories.map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => setCategory(item)}
+              style={[styles.filter, category === item && styles.filterActive]}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  category === item && styles.filterTextActive,
+                ]}
+              >
+                {item}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
 
-        <View style={styles.summary}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryNumber}>3</Text>
-            <Text style={styles.summaryLabel}>Secciones</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryNumber}>100%</Text>
-            <Text style={styles.summaryLabel}>Experiencia</Text>
-          </View>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Artículos disponibles</Text>
+          <Text style={styles.count}>{visibleProducts.length}</Text>
         </View>
-
-        <Text style={styles.sectionTitle}>Explora la aplicación</Text>
-        <View style={styles.menuGrid}>
-          {menuOptions.map((option) => (
-            <OpcionMenu
-              key={option.title}
-              title={option.title}
-              onPress={() => router.push(option.route)}
-            />
+        <View style={styles.grid}>
+          {visibleProducts.map((product) => (
+            <View key={product.id} style={styles.card}>
+              <Image source={{ uri: product.image }} style={styles.image} />
+              <View style={styles.cardContent}>
+                <Text style={styles.category}>
+                  {product.category.toUpperCase()}
+                </Text>
+                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={styles.period}>{product.period}</Text>
+                <View style={styles.footer}>
+                  <Text style={styles.price}>{product.price}</Text>
+                  <Pressable
+                    style={styles.buyButton}
+                    onPress={() => setSelectedProduct(product)}
+                  >
+                    <Text style={styles.buyText}>Comprar</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
           ))}
         </View>
+        {visibleProducts.length === 0 && (
+          <Text style={styles.empty}>No hay artículos para esa búsqueda.</Text>
+        )}
+
+        <View style={styles.linksRow}>
+          <Link href="/formulario" style={styles.link}>
+            Formulario
+          </Link>
+          <Link href="/imagenes" style={styles.link}>
+            Galería
+          </Link>
+          <Link href="/contacto" style={styles.link}>
+            Contacto
+          </Link>
+        </View>
       </ScrollView>
+
+      <Modal
+        visible={selectedProduct !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closePurchase}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Solicitar compra</Text>
+              <Pressable onPress={closePurchase}>
+                <Text style={styles.close}>X</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.selectedName}>{selectedProduct?.name}</Text>
+            <Text style={styles.selectedPrice}>{selectedProduct?.price}</Text>
+            <Text style={styles.label}>Tu nombre</Text>
+            <TextInput
+              style={styles.input}
+              value={buyerName}
+              onChangeText={setBuyerName}
+              placeholder="Nombre completo"
+            />
+            <Text style={styles.label}>Teléfono</Text>
+            <TextInput
+              style={styles.input}
+              value={buyerPhone}
+              onChangeText={setBuyerPhone}
+              placeholder="300 000 0000"
+              keyboardType="phone-pad"
+            />
+            <Pressable style={styles.primaryButton} onPress={confirmPurchase}>
+              <Text style={styles.primaryButtonText}>Enviar solicitud</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showSellForm}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSellForm(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Publicar artículo</Text>
+              <Pressable onPress={() => setShowSellForm(false)}>
+                <Text style={styles.close}>X</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.label}>Nombre del artículo</Text>
+            <TextInput
+              style={styles.input}
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="Ej. Lámpara vintage"
+            />
+            <Text style={styles.label}>Precio</Text>
+            <TextInput
+              style={styles.input}
+              value={newPrice}
+              onChangeText={setNewPrice}
+              placeholder="450000"
+              keyboardType="numeric"
+            />
+            <Pressable style={styles.primaryButton} onPress={publishProduct}>
+              <Text style={styles.primaryButtonText}>Publicar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
+  safeArea: { flex: 1, backgroundColor: "#F8F3EC" },
   container: { padding: 20, gap: 16 },
-  hero: { height: 240, overflow: "hidden", borderRadius: 22 },
-  heroImage: { width: "100%", height: "100%" },
-  heroOverlay: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: "flex-end",
-    padding: 22,
-    backgroundColor: "rgba(43, 24, 18, 0.42)",
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   eyebrow: {
-    color: "#F7D9B5",
-    fontSize: 12,
+    color: "#9B7650",
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
-  heroTitle: {
-    color: "#FFFFFF",
-    fontSize: 34,
+  title: { color: "#2B2218", fontSize: 36, fontWeight: "800", marginTop: 4 },
+  subtitle: { color: "#685B4F", fontSize: 15, marginTop: 3 },
+  sellButton: {
+    backgroundColor: "#846B46",
+    borderRadius: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+  },
+  sellButtonText: { color: "#FFFFFF", fontWeight: "800" },
+  search: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#D7C8B4",
+    color: "#221C14",
+  },
+  filters: { gap: 8 },
+  filter: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: "#E9DFD1",
+  },
+  filterActive: { backgroundColor: "#846B46" },
+  filterText: { color: "#685B4F", fontSize: 13, fontWeight: "600" },
+  filterTextActive: { color: "#FFFFFF" },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sectionTitle: { color: "#382B16", fontSize: 20, fontWeight: "800" },
+  count: { color: "#846B46", fontWeight: "800" },
+  grid: { gap: 14 },
+  card: {
+    backgroundColor: "#FFFAF4",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#D7C7A8",
+  },
+  image: { width: "100%", height: 190 },
+  cardContent: { padding: 15 },
+  category: {
+    color: "#A27B4E",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  productName: {
+    color: "#382B16",
+    fontSize: 18,
     fontWeight: "800",
     marginTop: 5,
   },
-  heroSubtitle: {
-    color: "#FFF7F0",
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  welcome: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 18,
+  period: { color: "#756B5D", marginTop: 4 },
+  footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#F2D5E0",
+    marginTop: 14,
   },
-  welcomeTitle: { color: "#6C4051", fontSize: 18, fontWeight: "800" },
-  welcomeText: { color: "#8A727C", marginTop: 5 },
-  coffeeIcon: { fontSize: 34 },
-  summary: {
-    backgroundColor: "#F8E8EE",
-    borderRadius: 18,
-    padding: 18,
+  price: { color: "#563D1B", fontSize: 17, fontWeight: "800" },
+  buyButton: {
+    backgroundColor: "#846B46",
+    borderRadius: 10,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+  },
+  buyText: { color: "#FFFFFF", fontWeight: "800" },
+  empty: { color: "#756B5D", textAlign: "center", padding: 20 },
+  linksRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center",
+    paddingVertical: 8,
   },
-  summaryItem: { alignItems: "center", minWidth: 110 },
-  summaryNumber: { color: "#6C4051", fontSize: 22, fontWeight: "800" },
-  summaryLabel: { color: "#8A727C", marginTop: 3 },
-  divider: { width: 1, height: 34, backgroundColor: "#E0B8C6" },
-  sectionTitle: {
-    color: "#563C46",
-    fontSize: 20,
-    fontWeight: "800",
-    marginTop: 4,
-  },
-  menuGrid: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "stretch",
-  },
-  menuCard: {
+  link: { color: "#846B46", fontWeight: "800" },
+  modalBackground: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 14,
-    minHeight: 76,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(43, 34, 22, 0.45)",
+  },
+  modal: {
+    backgroundColor: "#FFFDF8",
+    padding: 22,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    gap: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
+  },
+  modalTitle: { color: "#382B16", fontSize: 22, fontWeight: "800" },
+  close: { color: "#846B46", fontSize: 18, fontWeight: "800", padding: 5 },
+  selectedName: {
+    color: "#563D1B",
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+  selectedPrice: { color: "#846B46", fontWeight: "800", marginBottom: 8 },
+  label: { color: "#6D665C", fontSize: 13, fontWeight: "700", marginTop: 7 },
+  input: {
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#F2D5E0",
+    borderColor: "#D7C8B4",
+    borderRadius: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
   },
-  menuTitle: {
-    color: "#563C46",
-    fontSize: 14,
-    fontWeight: "800",
-    textAlign: "center",
+  primaryButton: {
+    backgroundColor: "#846B46",
+    borderRadius: 11,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 14,
   },
-  pressed: { opacity: 0.72 },
+  primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
 });
