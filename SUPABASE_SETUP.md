@@ -26,7 +26,19 @@ La migración `supabase/migrations/20261013221054_vitrina_forms.sql` **ya fue ap
 
 Ambas tablas permiten INSERT desde la aplicación; no permiten SELECT, UPDATE ni DELETE a roles públicos. RLS está habilitado. Los administradores pueden consultar las solicitudes en Supabase. No se alteran los permisos de `perfiles_usuario`, que exige autenticación.
 
-La migración no modifica `articulos_vitrina`. Sus políticas actuales permiten SELECT e INSERT para anon y authenticated; ambas operaciones se verificaron. No desactivar RLS para resolver errores. Los formularios son entradas públicas deliberadas, protegidas por validación de campos y permisos de columna; no se implementa autenticación ni un sistema de prevención de abuso en este cambio.
+La migración no modifica `articulos_vitrina`. Sus políticas actuales permiten SELECT e INSERT para anon y authenticated; ambas operaciones se verificaron. No desactivar RLS para resolver errores. Los formularios son entradas públicas deliberadas, protegidas por validación de campos y permisos de columna; no requieren iniciar sesión y no incorporan un sistema de prevención de abuso.
+
+## Usuario y sesión
+
+Inicio incluye **Ver usuario** y **Cerrar sesión**. Ver usuario abre `/usuario`: sin sesión permite iniciar sesión o crear una cuenta; con sesión muestra el correo y el perfil del usuario actual en `perfiles_usuario`. La consulta se restringe a su ID y respeta las políticas RLS existentes.
+
+Supabase Auth conserva la sesión entre recargas: almacenamiento del navegador en web y AsyncStorage en Android/iOS. Se renueva el token cuando corresponde y se detiene su renovación cuando la aplicación nativa está en segundo plano. No se guarda la contraseña en el código ni en el almacenamiento de la aplicación.
+
+Cerrar sesión usa `scope: local`: cierra el acceso en este dispositivo, conserva las sesiones de otros dispositivos y limpia el perfil, el registro reciente y los formularios abiertos. El botón se deshabilita mientras no hay sesión. Si la revocación remota falla, el SDK elimina las credenciales locales y la interfaz informa de que no pudo confirmar el cierre en el servidor.
+
+Crear cuenta utiliza la configuración de confirmación de correo de Supabase. Cuando el servidor no devuelve una sesión, la aplicación solicita confirmar el correo antes de entrar. El nombre en los metadatos se utiliza solo para mostrarlo, nunca para autorizar acceso a datos.
+
+La persistencia, perfil y cierre de sesión se probaron en Chrome con un servidor Auth simulado localmente; el endpoint real se comprobó con credenciales inválidas. No se crearon usuarios ni se enviaron correos reales durante estas pruebas. Detalles en [VALIDACION_INTERFAZ.md](VALIDACION_INTERFAZ.md).
 
 ## Estado de la validación remota
 

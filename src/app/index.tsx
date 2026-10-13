@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Image,
-    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -15,11 +14,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { connectionError, createProduct, loadProducts, requestPurchase, type Category, type Product } from '@/lib/vitrina';
 import { notify } from '@/lib/notify';
+import { ScreenModal } from '@/components/screen-modal';
+import { useAuth } from '@/lib/auth-context';
+import { authError, signOut } from '@/lib/auth';
+import { useRegistration } from '@/lib/registration-context';
 
 const categories: Category[] = ['Todos', 'Muebles', 'Arte', 'Relojes', 'Decoración'];
 
 export default function Inicio() {
   const router = useRouter();
+  const { session, loading: authLoading } = useAuth();
+  const { setRegistration } = useRegistration();
+  const [signingOut, setSigningOut] = useState(false);
+  const logoutRef = useRef(false);
+
+  async function logout() {
+    if (!session || logoutRef.current) return;
+    logoutRef.current = true;
+    setSigningOut(true);
+    try {
+      await signOut();
+      setRegistration(null);
+      closePurchase();
+      setShowSellForm(false);
+      setNewName(''); setNewPrice('');
+    } catch (error) { notify('Cerrar sesión', authError(error)); }
+    finally { logoutRef.current = false; setSigningOut(false); }
+  }
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -43,6 +64,11 @@ export default function Inicio() {
   const [buyerPhone, setBuyerPhone] = useState("");
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const userId = session?.user.id;
+  useEffect(() => {
+    setSelectedProduct(null); setShowSellForm(false);
+    setBuyerName(''); setBuyerPhone(''); setNewName(''); setNewPrice('');
+  }, [userId]);
 
   const visibleProducts = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -102,13 +128,14 @@ export default function Inicio() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <ScrollView
         contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerCopy}>
             <Text style={styles.eyebrow}>COMPRA Y VENDE CON HISTORIA</Text>
             <Text style={styles.title}>La Vitrina</Text>
             <Text style={styles.subtitle}>
@@ -117,9 +144,20 @@ export default function Inicio() {
           </View>
           <Pressable
             style={styles.sellButton}
+            accessibilityRole="button"
             onPress={() => setShowSellForm(true)}
           >
             <Text style={styles.sellButtonText}>+ Vender</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.accountCaption}>{authLoading ? 'Comprobando sesión...' : session ? 'Sesión iniciada' : 'Navegas como invitado'}</Text>
+        <View style={styles.accountActions}>
+          <Pressable accessibilityRole="button" style={styles.accountButton} onPress={() => router.push('/usuario')}>
+            <Text style={styles.linkButtonText}>Ver usuario</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityState={{ disabled: !session || signingOut || authLoading || saving }} disabled={!session || signingOut || authLoading || saving} onPress={logout} style={[styles.accountButton, (!session || signingOut || saving) && styles.pressed]}>
+            <Text style={styles.linkButtonText}>{signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</Text>
           </Pressable>
         </View>
 
@@ -130,14 +168,11 @@ export default function Inicio() {
           placeholder="Buscar por nombre o época..."
           placeholderTextColor="#958A7E"
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filters}
-        >
+        <View style={styles.filters}>
           {categories.map((item) => (
             <Pressable
               key={item}
+              accessibilityRole="button"
               onPress={() => setCategory(item)}
               style={[styles.filter, category === item && styles.filterActive]}
             >
@@ -151,7 +186,7 @@ export default function Inicio() {
               </Text>
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Artículos disponibles</Text>
@@ -174,6 +209,7 @@ export default function Inicio() {
                   <Text style={styles.price}>{product.price}</Text>
                   <Pressable
                     style={styles.buyButton}
+                    accessibilityRole="button"
                     onPress={() => setSelectedProduct(product)}
                   >
                     <Text style={styles.buyText}>Comprar</Text>
@@ -193,6 +229,7 @@ export default function Inicio() {
               styles.linkButton,
               pressed && styles.pressed,
             ]}
+            accessibilityRole="button"
             onPress={() => router.push("/formulario")}
           >
             <Text style={styles.linkButtonText}>Formulario</Text>
@@ -202,6 +239,7 @@ export default function Inicio() {
               styles.linkButton,
               pressed && styles.pressed,
             ]}
+            accessibilityRole="button"
             onPress={() => router.push("/imagenes")}
           >
             <Text style={styles.linkButtonText}>Galería</Text>
@@ -211,6 +249,7 @@ export default function Inicio() {
               styles.linkButton,
               pressed && styles.pressed,
             ]}
+            accessibilityRole="button"
             onPress={() => router.push("/contacto")}
           >
             <Text style={styles.linkButtonText}>Contacto</Text>
@@ -218,20 +257,11 @@ export default function Inicio() {
         </View>
       </ScrollView>
 
-      <Modal
-        visible={selectedProduct !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={closePurchase}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Solicitar compra</Text>
-              <Pressable onPress={closePurchase}>
-                <Text style={styles.close}>X</Text>
-              </Pressable>
-            </View>
+      <ScreenModal visible={selectedProduct !== null} onClose={closePurchase} title="Solicitar compra" closeLabel="Cerrar compra" disabled={saving} footer={
+        <Pressable accessibilityRole="button" style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={confirmPurchase}>
+          <Text style={styles.primaryButtonText}>{saving ? 'Enviando...' : 'Enviar solicitud'}</Text>
+        </Pressable>
+      }>
             <Text style={styles.selectedName}>{selectedProduct?.name}</Text>
             <Text style={styles.selectedPrice}>{selectedProduct?.price}</Text>
             <Text style={styles.label}>Tu nombre</Text>
@@ -253,27 +283,13 @@ export default function Inicio() {
               placeholder="300 000 0000"
               keyboardType="phone-pad"
             />
-            <Pressable style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={confirmPurchase}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Enviando...' : 'Enviar solicitud'}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      </ScreenModal>
 
-      <Modal
-        visible={showSellForm}
-        transparent
-        animationType="slide"
-        onRequestClose={() => { if (!savingRef.current) setShowSellForm(false); }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Publicar artículo</Text>
-              <Pressable onPress={() => { if (!savingRef.current) setShowSellForm(false); }}>
-                <Text style={styles.close}>X</Text>
-              </Pressable>
-            </View>
+      <ScreenModal visible={showSellForm} onClose={() => { if (!savingRef.current) setShowSellForm(false); }} title="Publicar artículo" closeLabel="Cerrar publicación" disabled={saving} footer={
+        <Pressable accessibilityRole="button" style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={publishProduct}>
+          <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Publicar'}</Text>
+        </Pressable>
+      }>
             <Text style={styles.label}>Nombre del artículo</Text>
             <TextInput
               maxLength={120}
@@ -293,21 +309,22 @@ export default function Inicio() {
               placeholder="450000"
               keyboardType="numeric"
             />
-            <Pressable style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={publishProduct}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Publicar'}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      </ScreenModal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8F3EC" },
-  container: { padding: 20, gap: 16 },
+  container: { padding: 20, gap: 16, width: '100%', maxWidth: 900, alignSelf: 'center' },
+  headerCopy: { flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 0 },
+  accountCaption: { color: '#685B4F' },
+  accountActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  accountButton: { flexGrow: 1, flexShrink: 1, flexBasis: 130, minHeight: 48, backgroundColor: '#846B46', padding: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
@@ -320,6 +337,8 @@ const styles = StyleSheet.create({
   title: { color: "#2B2218", fontSize: 36, fontWeight: "800", marginTop: 4 },
   subtitle: { color: "#685B4F", fontSize: 15, marginTop: 3 },
   sellButton: {
+    minHeight: 48,
+    justifyContent: "center",
     backgroundColor: "#846B46",
     borderRadius: 12,
     paddingHorizontal: 13,
@@ -335,8 +354,10 @@ const styles = StyleSheet.create({
     borderColor: "#D7C8B4",
     color: "#221C14",
   },
-  filters: { gap: 8 },
+  filters: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   filter: {
+    minHeight: 44,
+    justifyContent: "center",
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -345,7 +366,7 @@ const styles = StyleSheet.create({
   filterActive: { backgroundColor: "#846B46" },
   filterText: { color: "#685B4F", fontSize: 13, fontWeight: "600" },
   filterTextActive: { color: "#FFFFFF" },
-  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sectionHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
   sectionTitle: { color: "#382B16", fontSize: 20, fontWeight: "800" },
   count: { color: "#846B46", fontWeight: "800" },
   grid: { gap: 14 },
@@ -373,12 +394,16 @@ const styles = StyleSheet.create({
   period: { color: "#756B5D", marginTop: 4 },
   footer: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 14,
   },
-  price: { color: "#563D1B", fontSize: 17, fontWeight: "800" },
+  price: { flexShrink: 1, color: "#563D1B", fontSize: 17, fontWeight: "800" },
   buyButton: {
+    minHeight: 44,
+    justifyContent: "center",
     backgroundColor: "#846B46",
     borderRadius: 10,
     paddingHorizontal: 13,
@@ -388,6 +413,7 @@ const styles = StyleSheet.create({
   empty: { color: "#756B5D", textAlign: "center", padding: 20 },
   linksRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
     marginTop: 8,
     marginHorizontal: 4,
@@ -395,8 +421,9 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   linkButton: {
-    flex: 1,
-    flexBasis: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 100,
     minHeight: 44,
     backgroundColor: "#846B46",
     borderRadius: 10,
@@ -412,25 +439,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pressed: { opacity: 0.75 },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(43, 34, 22, 0.45)",
-  },
-  modal: {
-    backgroundColor: "#FFFDF8",
-    padding: 22,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    gap: 8,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  modalTitle: { color: "#382B16", fontSize: 22, fontWeight: "800" },
-  close: { color: "#846B46", fontSize: 18, fontWeight: "800", padding: 5 },
   selectedName: {
     color: "#563D1B",
     fontSize: 16,
@@ -448,11 +456,12 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
   },
   primaryButton: {
+    minHeight: 48,
+    justifyContent: "center",
     backgroundColor: "#846B46",
     borderRadius: 11,
     paddingVertical: 13,
     alignItems: "center",
-    marginTop: 14,
   },
-  primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
+  primaryButtonText: { textAlign: "center", color: "#FFFFFF", fontWeight: "800" },
 });

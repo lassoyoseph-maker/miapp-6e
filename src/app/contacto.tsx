@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Contacto() {
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Contacto</Text>
         <Text style={styles.subtitle}>
           Información general de la aplicación.
@@ -16,7 +16,7 @@ export default function Contacto() {
           <Dato label="Correo" value="contacto@ejemplo.com" />
           <Dato label="Ciudad" value="Pasto" />
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -32,7 +32,7 @@ function Dato({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: { flexGrow: 1, justifyContent: "center", padding: 20, width: "100%", maxWidth: 640, alignSelf: "center" },
   title: {
     color: "#6C4051",
     fontSize: 28,

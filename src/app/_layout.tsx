@@ -4,6 +4,7 @@ import { useColorScheme } from "react-native";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { RegistrationProvider } from '@/lib/registration-context';
+import { AuthProvider } from '@/lib/auth-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -12,6 +13,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <AuthProvider>
       <RegistrationProvider>
       <AnimatedSplashOverlay />
       <Stack
@@ -36,8 +38,10 @@ export default function RootLayout() {
         />
         <Stack.Screen name="imagenes" options={{ title: "Galería" }} />
         <Stack.Screen name="contacto" options={{ title: "Contacto" }} />
+        <Stack.Screen name="usuario" options={{ title: "Mi usuario" }} />
       </Stack>
       </RegistrationProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

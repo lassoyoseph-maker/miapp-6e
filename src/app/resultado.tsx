@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRegistration } from '@/lib/registration-context';
 
@@ -9,8 +9,8 @@ export default function Resultado() {
   const { nombre, correo, telefono, ciudad } = registration ?? {};
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>{registration ? 'Información registrada' : 'Sin registro reciente'}</Text>
         <Text style={styles.subtitle}>
           {registration ? 'Datos guardados en la base de datos.' : 'Completa el formulario para registrar tus datos.'}
@@ -27,7 +27,7 @@ export default function Resultado() {
         >
           <Text style={styles.buttonText}>Volver al inicio</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -43,7 +43,7 @@ function Dato({ label, value }: { label: string; value?: string }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: { flexGrow: 1, justifyContent: "center", padding: 20, width: "100%", maxWidth: 640, alignSelf: "center" },
   title: {
     color: "#6C4051",
     fontSize: 28,

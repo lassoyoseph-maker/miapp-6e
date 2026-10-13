@@ -1,4 +1,7 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { createClient, processLock, type SupabaseClient } from '@supabase/supabase-js';
 
 let client: SupabaseClient | undefined;
 
@@ -10,7 +13,12 @@ export function getSupabase() {
   }
   if (!client) {
     client = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      auth: {
+        ...(Platform.OS !== 'web' ? { storage: AsyncStorage, lock: processLock } : {}),
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
       global: {
         fetch: async (input, init) => {
           const controller = new AbortController();

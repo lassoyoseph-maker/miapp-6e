@@ -53,8 +53,8 @@ export default function Formulario() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         <Text style={styles.title}>Registro de usuario</Text>
         <Text style={styles.subtitle}>
           Completa la información para continuar.
@@ -114,7 +114,7 @@ export default function Formulario() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
-  container: { padding: 20, flexGrow: 1 },
+  container: { padding: 20, flexGrow: 1, width: "100%", maxWidth: 640, alignSelf: "center" },
   title: {
     color: "#6C4051",
     fontSize: 28,

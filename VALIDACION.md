@@ -27,7 +27,7 @@ Los datos sintéticos de ambas pruebas (API e interfaz) fueron identificados por
 - Galería: las tres imágenes se cargaron en Chrome. Sus endpoints responden HTTP 200 / image/jpeg; una prueba HTTP inicial de la tercera imagen requirió reintento.
 - `npm run check:connections`: todas las comprobaciones pasan; 401 es el resultado esperado para tablas privadas.
 - `npm run typecheck`: sin errores.
-- `npm test`: 6 pruebas pasan, con respuestas simuladas de Supabase; incluye rechazo de precios decimales porque la columna real es integer.
+- `npm test`: 12 pruebas pasan, con respuestas simuladas de Supabase: 6 de catálogo/formularios y 6 de autenticación. Incluye rechazo de precios decimales porque la columna real es integer.
 - `npx expo install --check`: dependencias compatibles con SDK 57.
 - `npx expo export --platform all --max-workers 2`: web, Android e iOS compilados después de la corrección de precios. La ejecución en dispositivos Android/iOS no se probó.
 
@@ -37,8 +37,10 @@ Security Advisor: 0 errores y 7 advertencias tras volver a ejecutar el análisis
 
 - INSERT público con `WITH CHECK (true)` en `articulos_vitrina`, `clientes_cafe`, `vitrina_registros` y `vitrina_solicitudes_compra`. Las dos tablas nuevas funcionan deliberadamente como formularios públicos: restricciones de campos y permisos por columna, sin lectura ni modificación pública. No hay control de abuso o autenticación en estos formularios.
 - Dos avisos de permisos de ejecución sobre la función SECURITY DEFINER existente `crear_perfil_usuario()`. La función y sus permisos no se modificaron en esta integración.
-- Protección contra contraseñas filtradas desactivada en Auth. Este proyecto no implementa un flujo de inicio de sesión desde la aplicación.
+- Protección contra contraseñas filtradas desactivada en Auth. El nuevo flujo de inicio de sesión conserva la configuración actual del servidor; este aviso continúa pendiente.
 
 `npm audit fix` corrigió el aviso crítico de shell-quote y otro aviso alto. Quedan 29 entradas (18 altas, 11 moderadas), incluyendo dependencias transitivas de Expo/Metro. No se aplicaron las propuestas de cambios incompatibles de `npm audit fix --force`.
 
 El conector administrativo sigue conectado a otro proyecto; se utilizó el SQL Editor de la sesión del usuario para completar el trabajo. Consultar [SUPABASE_SETUP.md](SUPABASE_SETUP.md) para configuración y funcionamiento de los formularios.
+
+La revisión de visibilidad de botones y las opciones de usuario/sesión se describen en [VALIDACION_INTERFAZ.md](VALIDACION_INTERFAZ.md).
