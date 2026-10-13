@@ -44,6 +44,9 @@ export async function loadProducts() {
 }
 
 export async function createProduct(name: string, price: number) {
+  if (!name.trim() || name.trim().length > 120 || !Number.isSafeInteger(price) || price <= 0 || price > 1000000000) {
+    throw new Error('Escribe un nombre y un precio entero positivo en pesos, sin separadores de miles.');
+  }
   const { data, error } = await getSupabase().from('articulos_vitrina').insert({
     nombre: name.trim(), precio: price, categoria: 'Decoración', epoca: 'Por verificar',
     imagen_url: 'https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900',

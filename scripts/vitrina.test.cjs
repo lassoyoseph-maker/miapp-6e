@@ -26,6 +26,14 @@ function service(response, status = 200) {
 
 const row = { id: 3, nombre: 'Mesa', categoria: 'Muebles', precio: 895000, epoca: 'Años 40', imagen_url: 'https://example.com/image.jpg' };
 
+test('publishing rejects decimals because the database price column is integer', async () => {
+  const { api, requests } = service(row);
+  for (const price of [1.5, 0, -1, NaN, Infinity, 1000000001]) {
+    await assert.rejects(api.createProduct('Mesa', price), /precio entero positivo/);
+  }
+  assert.equal(requests.length, 0);
+});
+
 test('catalog maps database fields, preserves database IDs and COP prices', async () => {
   const { api, requests } = service([row]);
   const products = await api.loadProducts();

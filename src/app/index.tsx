@@ -84,8 +84,8 @@ export default function Inicio() {
   async function publishProduct() {
     if (savingRef.current) return;
     const price = Number(newPrice.trim());
-    if (!newName.trim() || !/^\d+(\.\d{1,2})?$/.test(newPrice.trim()) || !Number.isFinite(price) || price <= 0 || price > 1000000000) {
-      notify('Datos incompletos', 'Escribe el nombre y un precio positivo, sin separadores de miles.');
+    if (!newName.trim() || !/^\d+$/.test(newPrice.trim()) || !Number.isSafeInteger(price) || price <= 0 || price > 1000000000) {
+      notify('Datos incompletos', 'Escribe el nombre y un precio entero positivo en pesos, sin separadores de miles.');
       return;
     }
     savingRef.current = true;
