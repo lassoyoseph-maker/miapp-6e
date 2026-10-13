@@ -1,22 +1,19 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRegistration } from '@/lib/registration-context';
 
 export default function Resultado() {
   const router = useRouter();
-  const { nombre, correo, telefono, ciudad } = useLocalSearchParams<{
-    nombre?: string;
-    correo?: string;
-    telefono?: string;
-    ciudad?: string;
-  }>();
+  const { registration, setRegistration } = useRegistration();
+  const { nombre, correo, telefono, ciudad } = registration ?? {};
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <View style={styles.container}>
-        <Text style={styles.title}>Información registrada</Text>
+        <Text style={styles.title}>{registration ? 'Información registrada' : 'Sin registro reciente'}</Text>
         <Text style={styles.subtitle}>
-          Datos recibidos desde el formulario.
+          {registration ? 'Datos guardados en la base de datos.' : 'Completa el formulario para registrar tus datos.'}
         </Text>
         <View style={styles.card}>
           <Dato label="Nombre" value={nombre} />
@@ -26,7 +23,7 @@ export default function Resultado() {
         </View>
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() => router.replace("/")}
+          onPress={() => { setRegistration(null); router.replace('/'); }}
         >
           <Text style={styles.buttonText}>Volver al inicio</Text>
         </Pressable>

@@ -1,43 +1,55 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { connectionError, registerContact } from '@/lib/vitrina';
+import { notify } from '@/lib/notify';
+import { useRegistration } from '@/lib/registration-context';
+
 export default function Formulario() {
   const router = useRouter();
+  const { setRegistration } = useRegistration();
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [telefono, setTelefono] = useState("");
   const [ciudad, setCiudad] = useState("");
 
-  function enviar() {
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
+  async function enviar() {
+    if (savingRef.current) return;
     if (
       !nombre.trim() ||
       !correo.trim() ||
       !telefono.trim() ||
       !ciudad.trim()
     ) {
-      Alert.alert("Campos incompletos", "Todos los campos son obligatorios.");
+      notify("Campos incompletos", "Todos los campos son obligatorios.");
       return;
     }
 
-    router.push({
-      pathname: "/resultado",
-      params: {
-        nombre: nombre.trim(),
-        correo: correo.trim(),
-        telefono: telefono.trim(),
-        ciudad: ciudad.trim(),
-      },
-    });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim()) || !/^[+\d][\d\s()-]{6,19}$/.test(telefono.trim())) {
+      notify('Datos inválidos', 'Escribe un correo y un teléfono válidos.');
+      return;
+    }
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      const values = { nombre: nombre.trim(), correo: correo.trim().toLowerCase(), telefono: telefono.trim(), ciudad: ciudad.trim() };
+      await registerContact(values);
+      setRegistration(values);
+      router.replace('/resultado');
+    } catch (error) { notify('No se pudo guardar', connectionError(error)); }
+    finally { savingRef.current = false; setSaving(false); }
   }
 
   return (
@@ -50,6 +62,8 @@ export default function Formulario() {
         <View style={styles.card}>
           <Text style={styles.label}>Nombre</Text>
           <TextInput
+            maxLength={120}
+            editable={!saving}
             style={styles.input}
             placeholder="Ingrese su nombre"
             value={nombre}
@@ -57,6 +71,8 @@ export default function Formulario() {
           />
           <Text style={styles.label}>Correo</Text>
           <TextInput
+            maxLength={254}
+            editable={!saving}
             style={styles.input}
             placeholder="correo@dominio.com"
             keyboardType="email-address"
@@ -66,6 +82,8 @@ export default function Formulario() {
           />
           <Text style={styles.label}>Teléfono</Text>
           <TextInput
+            maxLength={20}
+            editable={!saving}
             style={styles.input}
             placeholder="3001234567"
             keyboardType="phone-pad"
@@ -74,6 +92,8 @@ export default function Formulario() {
           />
           <Text style={styles.label}>Ciudad</Text>
           <TextInput
+            maxLength={120}
+            editable={!saving}
             style={styles.input}
             placeholder="Ej: Pasto"
             value={ciudad}
@@ -81,9 +101,10 @@ export default function Formulario() {
           />
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+            disabled={saving}
             onPress={enviar}
           >
-            <Text style={styles.buttonText}>Enviar información</Text>
+            <Text style={styles.buttonText}>{saving ? 'Guardando...' : 'Enviar información'}</Text>
           </Pressable>
         </View>
       </ScrollView>

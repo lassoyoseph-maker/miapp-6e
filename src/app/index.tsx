@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
+    ActivityIndicator,
     Image,
     Modal,
     Pressable,
@@ -13,61 +13,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Category = "Todos" | "Muebles" | "Arte" | "Relojes" | "Decoración";
-type Product = {
-  id: number;
-  name: string;
-  category: Exclude<Category, "Todos">;
-  price: string;
-  period: string;
-  image: string;
-};
+import { connectionError, createProduct, loadProducts, requestPurchase, type Category, type Product } from '@/lib/vitrina';
+import { notify } from '@/lib/notify';
 
-const categories: Category[] = [
-  "Todos",
-  "Muebles",
-  "Arte",
-  "Relojes",
-  "Decoración",
-];
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "Sillón francés de terciopelo",
-    category: "Muebles",
-    price: "$1.280.000",
-    period: "Años 50",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900",
-  },
-  {
-    id: 2,
-    name: "Reloj de bolsillo mecánico",
-    category: "Relojes",
-    price: "$780.000",
-    period: "Años 20",
-    image: "https://images.unsplash.com/photo-1612817288484-6f916006741a?w=900",
-  },
-  {
-    id: 3,
-    name: "Jarrón cerámico artesanal",
-    category: "Decoración",
-    price: "$460.000",
-    period: "Años 70",
-    image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=900",
-  },
-  {
-    id: 4,
-    name: "Grabado botánico enmarcado",
-    category: "Arte",
-    price: "$620.000",
-    period: "Siglo XIX",
-    image: "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900",
-  },
-];
+const categories: Category[] = ['Todos', 'Muebles', 'Arte', 'Relojes', 'Decoración'];
 
 export default function Inicio() {
   const router = useRouter();
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
+  async function refreshProducts() {
+    setLoading(true);
+    setLoadError('');
+    try { setProducts(await loadProducts()); }
+    catch (error) { setLoadError(connectionError(error)); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { void refreshProducts(); }, []);
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category>("Todos");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -90,44 +57,48 @@ export default function Inicio() {
   }, [products, search, category]);
 
   function closePurchase() {
+    if (savingRef.current) return;
     setSelectedProduct(null);
     setBuyerName("");
     setBuyerPhone("");
   }
 
-  function confirmPurchase() {
-    if (!buyerName.trim() || !buyerPhone.trim()) {
-      Alert.alert("Datos incompletos", "Escribe tu nombre y teléfono.");
+  async function confirmPurchase() {
+    if (savingRef.current || !selectedProduct) return;
+    if (!buyerName.trim() || !/^[+\d][\d\s()-]{6,19}$/.test(buyerPhone.trim())) {
+      notify('Datos incompletos', 'Escribe tu nombre y un teléfono válido.');
       return;
     }
-    Alert.alert(
-      "Solicitud enviada",
-      `Gracias, ${buyerName.trim()}. Te contactaremos pronto.`,
-    );
-    closePurchase();
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      await requestPurchase(selectedProduct.id, buyerName, buyerPhone);
+      setSelectedProduct(null);
+      setBuyerName('');
+      setBuyerPhone('');
+      notify('Solicitud enviada', 'Tu solicitud quedó guardada. Te contactaremos pronto.');
+    } catch (error) { notify('No se pudo enviar', connectionError(error)); }
+    finally { savingRef.current = false; setSaving(false); }
   }
 
-  function publishProduct() {
-    if (!newName.trim() || !newPrice.trim()) {
-      Alert.alert("Datos incompletos", "Escribe el nombre y el precio.");
+  async function publishProduct() {
+    if (savingRef.current) return;
+    const price = Number(newPrice.trim());
+    if (!newName.trim() || !/^\d+(\.\d{1,2})?$/.test(newPrice.trim()) || !Number.isFinite(price) || price <= 0 || price > 1000000000) {
+      notify('Datos incompletos', 'Escribe el nombre y un precio positivo, sin separadores de miles.');
       return;
     }
-    setProducts((current) => [
-      {
-        id: Date.now(),
-        name: newName.trim(),
-        category: "Decoración",
-        price: `$${newPrice.trim()}`,
-        period: "Por verificar",
-        image:
-          "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900",
-      },
-      ...current,
-    ]);
-    setNewName("");
-    setNewPrice("");
-    setShowSellForm(false);
-    Alert.alert("Artículo publicado", "El artículo ya aparece en el catálogo.");
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      const product = await createProduct(newName, price);
+      setProducts(current => [product, ...current]);
+      setNewName('');
+      setNewPrice('');
+      setShowSellForm(false);
+      notify('Artículo publicado', 'El artículo quedó guardado en el catálogo.');
+    } catch (error) { notify('No se pudo publicar', connectionError(error)); }
+    finally { savingRef.current = false; setSaving(false); }
   }
 
   return (
@@ -186,6 +157,9 @@ export default function Inicio() {
           <Text style={styles.sectionTitle}>Artículos disponibles</Text>
           <Text style={styles.count}>{visibleProducts.length}</Text>
         </View>
+        {loading && <ActivityIndicator accessibilityLabel="Cargando catálogo" color="#846B46" />}
+        {!!loadError && <View><Text accessibilityRole="alert" style={styles.empty}>{loadError}</Text>
+          <Pressable onPress={refreshProducts}><Text style={styles.period}>Reintentar conexión</Text></Pressable></View>}
         <View style={styles.grid}>
           {visibleProducts.map((product) => (
             <View key={product.id} style={styles.card}>
@@ -209,7 +183,7 @@ export default function Inicio() {
             </View>
           ))}
         </View>
-        {visibleProducts.length === 0 && (
+        {!loading && !loadError && visibleProducts.length === 0 && (
           <Text style={styles.empty}>No hay artículos para esa búsqueda.</Text>
         )}
 
@@ -262,6 +236,8 @@ export default function Inicio() {
             <Text style={styles.selectedPrice}>{selectedProduct?.price}</Text>
             <Text style={styles.label}>Tu nombre</Text>
             <TextInput
+              maxLength={120}
+              editable={!saving}
               style={styles.input}
               value={buyerName}
               onChangeText={setBuyerName}
@@ -269,14 +245,16 @@ export default function Inicio() {
             />
             <Text style={styles.label}>Teléfono</Text>
             <TextInput
+              maxLength={20}
+              editable={!saving}
               style={styles.input}
               value={buyerPhone}
               onChangeText={setBuyerPhone}
               placeholder="300 000 0000"
               keyboardType="phone-pad"
             />
-            <Pressable style={styles.primaryButton} onPress={confirmPurchase}>
-              <Text style={styles.primaryButtonText}>Enviar solicitud</Text>
+            <Pressable style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={confirmPurchase}>
+              <Text style={styles.primaryButtonText}>{saving ? 'Enviando...' : 'Enviar solicitud'}</Text>
             </Pressable>
           </View>
         </View>
@@ -286,18 +264,20 @@ export default function Inicio() {
         visible={showSellForm}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowSellForm(false)}
+        onRequestClose={() => { if (!savingRef.current) setShowSellForm(false); }}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Publicar artículo</Text>
-              <Pressable onPress={() => setShowSellForm(false)}>
+              <Pressable onPress={() => { if (!savingRef.current) setShowSellForm(false); }}>
                 <Text style={styles.close}>X</Text>
               </Pressable>
             </View>
             <Text style={styles.label}>Nombre del artículo</Text>
             <TextInput
+              maxLength={120}
+              editable={!saving}
               style={styles.input}
               value={newName}
               onChangeText={setNewName}
@@ -305,14 +285,16 @@ export default function Inicio() {
             />
             <Text style={styles.label}>Precio</Text>
             <TextInput
+              maxLength={13}
+              editable={!saving}
               style={styles.input}
               value={newPrice}
               onChangeText={setNewPrice}
               placeholder="450000"
               keyboardType="numeric"
             />
-            <Pressable style={styles.primaryButton} onPress={publishProduct}>
-              <Text style={styles.primaryButtonText}>Publicar</Text>
+            <Pressable style={[styles.primaryButton, saving && styles.pressed]} disabled={saving} onPress={publishProduct}>
+              <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Publicar'}</Text>
             </Pressable>
           </View>
         </View>

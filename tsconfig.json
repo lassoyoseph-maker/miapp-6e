@@ -14,5 +14,10 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "miapp-6e",
+    "**/* (2).*"
   ]
 }

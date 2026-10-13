@@ -1,4 +1,10 @@
-# Welcome to your Expo app 👋
+# La Vitrina
+
+La aplicación de catálogo, publicaciones, solicitudes de compra y registros está en la raíz de este repositorio. Para configurar Supabase y activar los formularios, consultar [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+
+El directorio `miapp-6e/` contiene una copia anterior del proyecto.
+
+## Documentación original de Expo
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 

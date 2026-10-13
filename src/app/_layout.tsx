@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useColorScheme } from "react-native";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import { RegistrationProvider } from '@/lib/registration-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -11,6 +12,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <RegistrationProvider>
       <AnimatedSplashOverlay />
       <Stack
         screenOptions={{
@@ -35,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="imagenes" options={{ title: "Galería" }} />
         <Stack.Screen name="contacto" options={{ title: "Contacto" }} />
       </Stack>
+      </RegistrationProvider>
     </ThemeProvider>
   );
 }
