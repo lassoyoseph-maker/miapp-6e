@@ -85,3 +85,5 @@ Verificación adicional real: RLS activo; dos políticas; SELECT anónimo deshab
 Asesor de seguridad ejecutado después de la migración: **0 errores y 7 advertencias**, las mismas advertencias documentadas de las tablas y configuración anteriores. Evidencia de permisos: [captura de Supabase](./docs/validacion/supabase-permisos.png).
 
 Build final solicitado con el código del commit `58bfca9`: [ver build APK en EAS](https://expo.dev/accounts/lassoyoseph/projects/miapp-6e/builds/04e3586c-e69b-4e7f-a04f-3ded0df71522).
+
+Capturas de la versión web (no equivalen a instalación Android): [Login](./docs/validacion/login-web.png) · [Registro](./docs/validacion/registro-web.png). En el cliente de producción, Supabase rechazó correctamente un intento con credenciales inválidas; no se obtuvo sesión ni acceso a rutas privadas.
