@@ -76,3 +76,12 @@ El perfil preview incluye únicamente URL y clave publicable. Nunca agregar clav
 - Se reemplazó el primer intento EAS por una compilación de la revisión final, con icono cuadrado y navegación definitiva. Consultar el build más reciente del perfil preview.
 
 Referencias técnicas consultadas: [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/), [rutas protegidas](https://docs.expo.dev/router/advanced/protected/), [RLS en Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+### Base de datos validada después de la autorización
+La migración de preferencias se aplicó correctamente en `bprerqyiorgovbponcdw`. Una prueba dentro de una transacción cambió al rol authenticated, insertó una preferencia bajo el UID de una cuenta existente, comprobó SELECT propio y cambió a otro UID para comprobar que no viera la fila. La transacción se revirtió para no dejar datos de prueba. El chequeo público de conexiones confirma que `vitrina_preferencias` existe y rechaza SELECT anónimo con HTTP 401 / 42501.
+
+Verificación adicional real: RLS activo; dos políticas; SELECT anónimo deshabilitado; INSERT de campos de formulario habilitado para authenticated; cambiar `usuario_id` mediante INSERT deshabilitado; cero residuos de prueba. Supabase tiene dos cuentas existentes (no se afirma que hayan sido creadas durante esta revisión). El script reproducible está en `supabase/tests/preferences_rls.sql`.
+
+Asesor de seguridad ejecutado después de la migración: **0 errores y 7 advertencias**, las mismas advertencias documentadas de las tablas y configuración anteriores. Evidencia de permisos: [captura de Supabase](./docs/validacion/supabase-permisos.png).
+
+Build final solicitado con el código del commit `58bfca9`: [ver build APK en EAS](https://expo.dev/accounts/lassoyoseph/projects/miapp-6e/builds/04e3586c-e69b-4e7f-a04f-3ded0df71522).

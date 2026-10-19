@@ -44,3 +44,6 @@ Security Advisor: 0 errores y 7 advertencias tras volver a ejecutar el análisis
 El conector administrativo sigue conectado a otro proyecto; se utilizó el SQL Editor de la sesión del usuario para completar el trabajo. Consultar [SUPABASE_SETUP.md](SUPABASE_SETUP.md) para configuración y funcionamiento de los formularios.
 
 La revisión de visibilidad de botones y las opciones de usuario/sesión se describen en [VALIDACION_INTERFAZ.md](VALIDACION_INTERFAZ.md).
+
+## Validación académica de muebles — 19 de octubre de 2026
+15 pruebas automatizadas aprobadas y exportación Android/iOS/web correcta. Migración `20261019214345_furniture_customer_preferences.sql` aplicada en el proyecto real tras autorización. Prueba SQL transaccional de INSERT y SELECT propios frente a otro UID superada; rollback al terminar. `check:connections` incluye la nueva tabla privada y confirma denegación anónima. Las pruebas de navegador con login y formulario exitosos usaron un simulador local y no se presentan como evidencia de usuarios reales ni de instalación Android. Véase `ENTREGA_FINAL.md`.

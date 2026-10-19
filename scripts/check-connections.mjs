@@ -8,6 +8,7 @@ const checks = [
   ['Autenticación', '/auth/v1/settings'],
   ['Catálogo', '/rest/v1/articulos_vitrina?select=id,nombre,categoria,precio,epoca,imagen_url&limit=0'],
   ['Registro', '/rest/v1/vitrina_registros?select=id&limit=0', true],
+  ['Preferencias privadas', '/rest/v1/vitrina_preferencias?select=id&limit=0', true],
   ['Compras', '/rest/v1/vitrina_solicitudes_compra?select=id&limit=0', true],
 ];
 let failed = false;
