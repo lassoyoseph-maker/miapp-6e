@@ -111,3 +111,6 @@ Las tres fotografías remotas de la galería respondieron HTTP 200 con Content-T
 - Laboratorio_Coffee_App_Supabase (3).docx
 - Laboratorio_Coffee_App_Login_Rutas_Protegidas (1).docx
 - Guia_Laboratorio_Generacion_APK_Expo_EAS (2).docx
+
+## Actualización posterior: comprobación de Expo corregida
+Las cinco diferencias de parches del build anterior se corrigieron en package.json y package-lock.json. La revisión actual aprueba `expo-doctor` **21/21**, además de TypeScript y las 18 pruebas. El APK enlazado arriba corresponde al build anterior: para incluir estos parches y las correcciones posteriores del registro y las etiquetas, compilar de nuevo con `eas build -p android --profile preview` usando la rama actualizada.
