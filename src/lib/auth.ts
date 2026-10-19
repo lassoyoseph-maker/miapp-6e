@@ -4,6 +4,10 @@ export type UserProfile = { nombre_completo: string | null; telefono: string | n
 
 export function authError(error: unknown) {
   const code = (error as { code?: string })?.code;
+  if (code === 'user_already_exists' || code === 'email_exists' ||
+      (error as { message?: string })?.message === 'User already registered') {
+    return 'Correo registrado. Inicia sesión con tu cuenta.';
+  }
   if (code === 'invalid_credentials') return 'El correo o la contraseña no son correctos.';
   if (code === 'email_not_confirmed') return 'Confirma tu correo antes de iniciar sesión.';
   if (code === 'weak_password') return 'Elige una contraseña más segura.';
@@ -25,6 +29,11 @@ export async function signUp(email: string, password: string, name: string) {
     options: { data: { nombre_completo: name.trim() } },
   });
   if (error) throw error;
+  // With confirmation enabled, an existing confirmed account can be returned
+  // as an obfuscated user with no identities instead of an API error.
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
+  }
   return data.session;
 }
 

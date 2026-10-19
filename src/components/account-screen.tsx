@@ -34,7 +34,7 @@ export default function AccountScreen({ initialCreating = false }: { initialCrea
     try {
       if (creating) {
         const nextSession = await signUp(email, password, name);
-        if (!nextSession) setMessage('Revisa tu correo para confirmar la cuenta. Después podrás iniciar sesión.');
+        if (!nextSession) setMessage('Correo registrado. Revisa tu correo para confirmar la cuenta. Después podrás iniciar sesión.');
       } else { await signIn(email, password); router.replace('/'); }
       setPassword('');
     } catch (err) { setError(authError(err)); }

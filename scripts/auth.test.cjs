@@ -75,3 +75,31 @@ test('invalid credentials never become a successful session', async () => {
   assert.equal((await client.auth.getSession()).data.session, null);
   assert.match(api.authError({ code: 'invalid_credentials' }), /no son correctos/);
 });
+
+test('duplicate signup errors show Correo registrado and never create a session', async () => {
+  for (const code of ['user_already_exists', 'email_exists']) {
+    const { api, client, requests } = service(() => json({ code, msg: 'User already registered' }, 422));
+    await assert.rejects(api.signUp(' TEST@example.invalid ', 'test-password', 'Test'), error => {
+      assert.equal(api.authError(error), 'Correo registrado. Inicia sesión con tu cuenta.');
+      return true;
+    });
+    assert.equal(JSON.parse(requests[0].body).email, 'test@example.invalid');
+    assert.equal((await client.auth.getSession()).data.session, null);
+  }
+});
+
+test('an obfuscated duplicate signup is not presented as a new registration', async () => {
+  const { api, client } = service(() => json({ user: { ...user, identities: [] } }));
+  await assert.rejects(api.signUp(user.email, 'test-password', 'Test'), error => {
+    assert.equal(error.code, 'user_already_exists');
+    assert.equal(api.authError(error), 'Correo registrado. Inicia sesión con tu cuenta.');
+    return true;
+  });
+  assert.equal((await client.auth.getSession()).data.session, null);
+});
+
+test('a new email identity still follows the email confirmation flow', async () => {
+  const { api } = service(() => json({ user: { ...user, identities: [{ id: userId, provider: 'email' }] } }));
+  assert.equal(await api.signUp(user.email, 'test-password', 'Test'), null);
+  assert.equal(api.authError({ message: 'User already registered' }), 'Correo registrado. Inicia sesión con tu cuenta.');
+});
