@@ -47,3 +47,5 @@ La revisión de visibilidad de botones y las opciones de usuario/sesión se desc
 
 ## Validación académica de muebles — 19 de octubre de 2026
 15 pruebas automatizadas aprobadas y exportación Android/iOS/web correcta. Migración `20261019214345_furniture_customer_preferences.sql` aplicada en el proyecto real tras autorización. Prueba SQL transaccional de INSERT y SELECT propios frente a otro UID superada; rollback al terminar. `check:connections` incluye la nueva tabla privada y confirma denegación anónima. Las pruebas de navegador con login y formulario exitosos usaron un simulador local y no se presentan como evidencia de usuarios reales ni de instalación Android. Véase `ENTREGA_FINAL.md`.
+
+EAS finalizó correctamente el build Android `04e3586c-e69b-4e7f-a04f-3ded0df71522`; APK descargado y estructura comprobada (AndroidManifest.xml y classes.dex). El paso expo-doctor advirtió cinco parches más recientes de paquetes de SDK 57 (20/21 comprobaciones aprobadas); la compilación nativa concluyó. La instalación y las pruebas físicas en Android permanecen pendientes. En ENTREGA_FINAL.md están el enlace al APK, su SHA-256 y la captura de EAS.

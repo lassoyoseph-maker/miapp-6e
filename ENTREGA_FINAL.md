@@ -15,7 +15,7 @@ Revisión del 19 de octubre de 2026 contra las cinco guías suministradas. Se co
 | Login y rutas protegidas | Grupos `(auth)` y `(app)`, Stack.Protected, bloqueo al salir | Implementado para todas las pantallas privadas; pantalla de usuario y cierre de sesión en Home |
 | Login y rutas protegidas | Dos usuarios, contraseña incorrecta, persistencia tras cerrar y reabrir | Pruebas automáticas y simulador separados de las evidencias que deben obtenerse con cuentas reales y dispositivo |
 | APK / EAS | Nombre propio, package Android, proyecto EAS, perfil preview con buildType apk | `app.json`, `eas.json`; proyecto @lassoyoseph/miapp-6e enlazado |
-| APK / EAS | Build exitoso, archivo APK, instalación y registro desde Android | Consultar estado real del build. Exportar JS no equivale a generar ni instalar un APK |
+| APK / EAS | Build exitoso, archivo APK, instalación y registro desde Android | APK generado correctamente en EAS; pendiente instalarlo y obtener evidencias desde Android. Exportar JS no equivale a generar ni instalar un APK |
 
 ## Adaptaciones deliberadas
 
@@ -52,7 +52,7 @@ eas build -p android --profile preview
 eas build:list --platform android --limit 1
 ```
 
-El perfil preview incluye únicamente URL y clave publicable. Nunca agregar claves secretas al cliente ni a capturas. La tabla nueva requiere aplicar la migración incluida antes de presentar el formulario.
+El perfil preview incluye únicamente URL y clave publicable. Nunca agregar claves secretas al cliente ni a capturas. La migración de la tabla nueva ya está aplicada en el proyecto real; el archivo incluido permite revisar su esquema y políticas.
 
 ## Preguntas de cierre: respuestas para estudiar
 
@@ -87,3 +87,27 @@ Asesor de seguridad ejecutado después de la migración: **0 errores y 7 adverte
 Build final solicitado con el código del commit `58bfca9`: [ver build APK en EAS](https://expo.dev/accounts/lassoyoseph/projects/miapp-6e/builds/04e3586c-e69b-4e7f-a04f-3ded0df71522).
 
 Capturas de la versión web (no equivalen a instalación Android): [Login](./docs/validacion/login-web.png) · [Registro](./docs/validacion/registro-web.png). En el cliente de producción, Supabase rechazó correctamente un intento con credenciales inválidas; no se obtuvo sesión ni acceso a rutas privadas.
+
+## APK generado
+
+**EAS: FINISHED / Tuvo éxito.** [Descargar APK](https://expo.dev/artifacts/eas/AyzFYYNFwezACLYy-EkfcZ71OVhbvKRH_VvHnMQLM9A.apk) · [Ver build](https://expo.dev/accounts/lassoyoseph/projects/miapp-6e/builds/04e3586c-e69b-4e7f-a04f-3ded0df71522) · [Captura del build exitoso](./docs/validacion/eas-apk-exitoso.png).
+
+Aplicación: La Vitrina Muebles 1.0.0 (1), paquete Android com.lassoyoseph.lavitrina. Tamaño: 104.709.259 bytes. Se descargó el archivo y se comprobó su estructura APK con AndroidManifest.xml y classes.dex. Esta comprobación no sustituye instalar y recorrer la app en un dispositivo.
+
+SHA-256: 8B3A7208237D3DFC641480ACA2A442E8C888D83AA78CE147DA0001F8C8204884
+
+El instalador también se guardó en Descargas como LaVitrina-Muebles-1.0.0-04e3586c.apk. EAS conserva este artefacto temporalmente: guardar una copia para la entrega.
+
+En el build, expo-doctor aprobó 20 de 21 comprobaciones; advirtió cinco parches más recientes dentro de SDK 57: @expo/ui, expo, expo-constants, expo-linking y expo-router. La compilación nativa terminó correctamente con las versiones bloqueadas del proyecto. No se afirma que expo-doctor esté completamente limpio.
+
+Pendientes de evidencia del estudiante: instalación en Android, tres preferencias creadas desde la APK y comparación de esas filas con Supabase, capturas del recorrido completo y persistencia al cerrar/reabrir la aplicación instalada. Las dos cuentas existentes se verificaron por conteo; aún debe obtenerse la captura de Authentication → Users para la entrega.
+
+Las tres fotografías remotas de la galería respondieron HTTP 200 con Content-Type image/jpeg durante esta revisión.
+
+## Documentos contrastados
+
+- Guia_Laboratorio_1_React_Native_Componentes_Formulario_Eventos (6).docx
+- Guia_Laboratorio_Expo_Router_App_Coffee (1).docx
+- Laboratorio_Coffee_App_Supabase (3).docx
+- Laboratorio_Coffee_App_Login_Rutas_Protegidas (1).docx
+- Guia_Laboratorio_Generacion_APK_Expo_EAS (2).docx
