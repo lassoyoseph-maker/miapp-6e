@@ -1,3 +1,4 @@
+import { FurniturePreview } from '@/components/furniture-preview';
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -136,10 +137,10 @@ export default function Inicio() {
       >
         <View style={styles.header}>
           <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>COMPRA Y VENDE CON HISTORIA</Text>
+            <Text style={styles.eyebrow}>MUEBLES PARA VIVIR TU HOGAR</Text>
             <Text style={styles.title}>La Vitrina</Text>
             <Text style={styles.subtitle}>
-              Artículos antiguos para nuevos hogares.
+              Encuentra muebles con historia y estilo para tu hogar.
             </Text>
           </View>
           <Pressable
@@ -189,7 +190,7 @@ export default function Inicio() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Artículos disponibles</Text>
+          <Text style={styles.sectionTitle}>Muebles y complementos disponibles</Text>
           <Text style={styles.count}>{visibleProducts.length}</Text>
         </View>
         {loading && <ActivityIndicator accessibilityLabel="Cargando catálogo" color="#846B46" />}
@@ -223,7 +224,9 @@ export default function Inicio() {
           <Text style={styles.empty}>No hay artículos para esa búsqueda.</Text>
         )}
 
+        <FurniturePreview />
         <View style={styles.linksRow}>
+          <Pressable accessibilityRole="button" style={styles.linkButton} onPress={() => router.push('/registros')}><Text style={styles.linkButtonText}>Mis registros</Text></Pressable>
           <Pressable
             style={({ pressed }) => [
               styles.linkButton,

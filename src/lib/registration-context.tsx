@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { useAuth } from './auth-context';
 
-type Registration = { nombre: string; correo: string; telefono: string; ciudad: string };
+import type { FurnitureRegistration } from './vitrina';
+type Registration = FurnitureRegistration;
 const Context = createContext<{
   registration: Registration | null;
   setRegistration: (value: Registration | null) => void;

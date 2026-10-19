@@ -48,8 +48,8 @@ export async function createProduct(name: string, price: number) {
     throw new Error('Escribe un nombre y un precio entero positivo en pesos, sin separadores de miles.');
   }
   const { data, error } = await getSupabase().from('articulos_vitrina').insert({
-    nombre: name.trim(), precio: price, categoria: 'Decoración', epoca: 'Por verificar',
-    imagen_url: 'https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900',
+    nombre: name.trim(), precio: price, categoria: 'Muebles', epoca: 'Mueble de segunda mano',
+    imagen_url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900',
   }).select(columns).single();
   if (error) throw error;
   return toProduct(data as ProductRow);
@@ -65,4 +65,22 @@ export async function requestPurchase(productId: number, name: string, phone: st
 export async function registerContact(values: { nombre: string; correo: string; telefono: string; ciudad: string }) {
   const { error } = await getSupabase().from('vitrina_registros').insert(values);
   if (error) throw error;
+}
+
+export type FurnitureRegistration = {
+  id: string; nombre: string; correo: string; telefono: string; ciudad: string;
+  mueble_favorito: string; material_preferido: string; created_at: string;
+};
+export type FurnitureInput = Omit<FurnitureRegistration, 'id' | 'created_at'>;
+const registrationColumns = 'id,nombre,correo,telefono,ciudad,mueble_favorito,material_preferido,created_at';
+export async function saveFurnitureRegistration(values: FurnitureInput): Promise<FurnitureRegistration> {
+  const { data, error } = await getSupabase().from('vitrina_preferencias').insert(values).select(registrationColumns).single();
+  if (error) throw error;
+  if (!data) throw new Error('El servidor no devolvió el registro.');
+  return data as FurnitureRegistration;
+}
+export async function loadFurnitureRegistrations(): Promise<FurnitureRegistration[]> {
+  const { data, error } = await getSupabase().from('vitrina_preferencias').select(registrationColumns).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as FurnitureRegistration[];
 }

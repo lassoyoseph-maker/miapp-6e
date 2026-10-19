@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { connectionError, registerContact } from '@/lib/vitrina';
+import { connectionError, saveFurnitureRegistration } from '@/lib/vitrina';
 import { notify } from '@/lib/notify';
 import { useRegistration } from '@/lib/registration-context';
 
@@ -22,6 +22,8 @@ export default function Formulario() {
   const [telefono, setTelefono] = useState("");
   const [ciudad, setCiudad] = useState("");
 
+  const [mueble, setMueble] = useState("");
+  const [material, setMaterial] = useState("");
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
@@ -31,7 +33,7 @@ export default function Formulario() {
       !nombre.trim() ||
       !correo.trim() ||
       !telefono.trim() ||
-      !ciudad.trim()
+      !ciudad.trim() || !mueble.trim() || !material.trim()
     ) {
       notify("Campos incompletos", "Todos los campos son obligatorios.");
       return;
@@ -44,10 +46,10 @@ export default function Formulario() {
     savingRef.current = true;
     setSaving(true);
     try {
-      const values = { nombre: nombre.trim(), correo: correo.trim().toLowerCase(), telefono: telefono.trim(), ciudad: ciudad.trim() };
-      await registerContact(values);
-      setRegistration(values);
-      router.replace('/resultado');
+      const values = { nombre: nombre.trim(), correo: correo.trim().toLowerCase(), telefono: telefono.trim(), ciudad: ciudad.trim(), mueble_favorito: mueble.trim(), material_preferido: material.trim() };
+      const saved = await saveFurnitureRegistration(values);
+      setRegistration(saved);
+      router.replace({ pathname: '/resultado', params: { id: saved.id } });
     } catch (error) { notify('No se pudo guardar', connectionError(error)); }
     finally { savingRef.current = false; setSaving(false); }
   }
@@ -55,9 +57,9 @@ export default function Formulario() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
-        <Text style={styles.title}>Registro de usuario</Text>
+        <Text style={styles.title}>Preferencias de muebles</Text>
         <Text style={styles.subtitle}>
-          Completa la información para continuar.
+          Cuéntanos qué mueble y material buscas para tu hogar.
         </Text>
         <View style={styles.card}>
           <Text style={styles.label}>Nombre</Text>
@@ -99,6 +101,10 @@ export default function Formulario() {
             value={ciudad}
             onChangeText={setCiudad}
           />
+          <Text style={styles.label}>Mueble favorito</Text>
+          <TextInput accessibilityLabel="Mueble favorito" maxLength={120} editable={!saving} style={styles.input} placeholder="Ej: sofá, mesa o armario" value={mueble} onChangeText={setMueble} />
+          <Text style={styles.label}>Material preferido</Text>
+          <TextInput accessibilityLabel="Material preferido" maxLength={120} editable={!saving} style={styles.input} placeholder="Ej: madera, metal o tapizado" value={material} onChangeText={setMaterial} />
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.pressed]}
             disabled={saving}
@@ -113,17 +119,17 @@ export default function Formulario() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFF7FA" },
+  safeArea: { flex: 1, backgroundColor: "#F7F3EC" },
   container: { padding: 20, flexGrow: 1, width: "100%", maxWidth: 640, alignSelf: "center" },
   title: {
-    color: "#6C4051",
+    color: "#544633",
     fontSize: 28,
     fontWeight: "800",
     textAlign: "center",
     marginTop: 18,
   },
   subtitle: {
-    color: "#8A727C",
+    color: "#756B5E",
     textAlign: "center",
     marginTop: 8,
     marginBottom: 22,
@@ -133,26 +139,26 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#F2D5E0",
+    borderColor: "#DDD4C7",
   },
   label: {
-    color: "#A06C80",
+    color: "#776548",
     fontSize: 13,
     fontWeight: "700",
     marginTop: 10,
     marginBottom: 6,
   },
   input: {
-    backgroundColor: "#FFF9FB",
+    backgroundColor: "#FAF8F4",
     borderWidth: 1,
-    borderColor: "#E8C8D3",
+    borderColor: "#DDD4C7",
     borderRadius: 12,
     paddingHorizontal: 13,
     paddingVertical: 12,
-    color: "#563C46",
+    color: "#544633",
   },
   button: {
-    backgroundColor: "#C96A8B",
+    backgroundColor: "#846B46",
     paddingVertical: 14,
     borderRadius: 13,
     alignItems: "center",

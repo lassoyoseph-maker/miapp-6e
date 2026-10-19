@@ -80,3 +80,27 @@ test('missing tables and denied RLS propagate as failures instead of success', a
     assert.match(api.connectionError({ code }), /administrador/);
   }
 });
+
+const furniture = { id: 'record-1', nombre: 'Ana', correo: 'ana@example.invalid', telefono: '3001234567', ciudad: 'Pasto', mueble_favorito: 'Mesa', material_preferido: 'Madera', created_at: '2026-10-19T00:00:00Z' };
+test('furniture form preserves both preferences and uses the server record', async () => {
+ const { api, requests } = service(furniture);
+ const { id, created_at, ...input } = furniture;
+ const result = await api.saveFurnitureRegistration(input);
+ assert.equal(result.id, id);
+ assert.equal(result.material_preferido, 'Madera');
+ assert.match(requests[0].url, /vitrina_preferencias/);
+ assert.deepEqual(JSON.parse(requests[0].body), input);
+ assert.equal(JSON.parse(requests[0].body).usuario_id, undefined);
+ assert.match(requests[0].headers.get('Prefer'), /return=representation/);
+});
+test('saved preferences are queried in newest-first order', async () => {
+ const { api, requests } = service([furniture]);
+ const rows = await api.loadFurnitureRegistrations();
+ assert.equal(rows[0].mueble_favorito, 'Mesa');
+ assert.match(requests[0].url, /order=created_at.desc/);
+});
+test('private preference read/write errors cannot become a successful result', async () => {
+ const { api } = service({ code: '42501', message: 'Denied' }, 401);
+ await assert.rejects(api.loadFurnitureRegistrations(), error => error.code === '42501');
+ await assert.rejects(api.saveFurnitureRegistration({}), error => error.code === '42501');
+});

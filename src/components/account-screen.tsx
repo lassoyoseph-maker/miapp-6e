@@ -6,14 +6,14 @@ import { authError, signIn, signOut, signUp } from '@/lib/auth';
 import { useAuth } from '@/lib/auth-context';
 import { useRegistration } from '@/lib/registration-context';
 
-export default function Usuario() {
+export default function AccountScreen({ initialCreating = false }: { initialCreating?: boolean }) {
   const router = useRouter();
   const { session, loading, profile, profileLoading, error: sessionError } = useAuth();
   const { setRegistration } = useRegistration();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [creating, setCreating] = useState(false);
+  const creating = initialCreating;
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [error, setError] = useState('');
@@ -35,8 +35,7 @@ export default function Usuario() {
       if (creating) {
         const nextSession = await signUp(email, password, name);
         if (!nextSession) setMessage('Revisa tu correo para confirmar la cuenta. Después podrás iniciar sesión.');
-        setCreating(false);
-      } else { await signIn(email, password); }
+      } else { await signIn(email, password); router.replace('/'); }
       setPassword('');
     } catch (err) { setError(authError(err)); }
     finally { busyRef.current = false; setBusy(false); }
@@ -54,7 +53,7 @@ export default function Usuario() {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
-        <Text style={styles.title}>Mi usuario</Text>
+        <Text style={styles.title}>{session ? 'Mi usuario' : 'La Vitrina · Muebles'}</Text>
         {loading ? <ActivityIndicator accessibilityLabel="Cargando sesión" /> : session ? (
           <View style={styles.card}>
             <Text style={styles.heading}>{displayName}</Text>
@@ -79,16 +78,16 @@ export default function Usuario() {
             <Pressable accessibilityRole="button" disabled={busy} onPress={submit} style={[styles.button, busy && styles.disabled]}>
               <Text style={styles.buttonText}>{busy ? 'Procesando...' : creating ? 'Crear cuenta' : 'Iniciar sesión'}</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setCreating(!creating); setError(''); setMessage(''); }} style={styles.secondary}>
+            <Pressable accessibilityRole="button" disabled={busy} onPress={() => { router.replace(creating ? '/login' : '/registro'); setError(''); setMessage(''); }} style={styles.secondary}>
               <Text style={styles.secondaryText}>{creating ? 'Ya tengo cuenta' : 'Crear una cuenta'}</Text>
             </Pressable>
           </View>
         )}
         {!!(error || sessionError) && <Text accessibilityRole="alert" style={styles.error}>{error || sessionError}</Text>}
         {!!message && <Text accessibilityRole="alert" style={styles.note}>{message}</Text>}
-        <Pressable accessibilityRole="button" onPress={() => router.replace('/')} style={styles.secondary}>
+        {session && <Pressable accessibilityRole="button" onPress={() => router.replace('/')} style={styles.secondary}>
           <Text style={styles.secondaryText}>Volver al inicio</Text>
-        </Pressable>
+        </Pressable>}
       </ScrollView>
     </SafeAreaView>
   );

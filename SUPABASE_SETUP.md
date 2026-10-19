@@ -49,3 +49,6 @@ El conector administrativo continúa asociado a otra cuenta; el acceso necesario
 `check:connections` es una comprobación de lectura: verifica Auth, columnas del catálogo y existencia/protección de las tablas privadas. No prueba INSERT. Las respuestas HTTP 401 / 42501 de las tablas privadas son esperadas y confirman que la lectura pública está denegada. Los tests del servicio verifican peticiones, validación de precios y propagación de errores con respuestas simuladas. Las pruebas reales de INSERT y privacidad ya se completaron; repetirlas cuando cambien esquema o permisos.
 
 La interfaz solo confirma una operación cuando Supabase la acepta. Conserva los campos si falla, bloquea envíos simultáneos y permite reintentar la carga del catálogo. Los datos del formulario no viajan en la URL.
+
+### Ampliación académica de muebles (19-10-2026)
+El formulario principal ahora utiliza `vitrina_preferencias`, con `mueble_favorito`, `material_preferido` y `usuario_id` asignado por `auth.uid()`. Aplicar la migración `20261019214345_furniture_customer_preferences.sql`. Solo authenticated puede insertar sus propios registros y consultarlos; anon no tiene permisos. No se modifica la tabla de café ni las bandejas públicas anteriores. Los usuarios acceden tras iniciar sesión, mediante Stack.Protected. Véase ENTREGA_FINAL.md.
