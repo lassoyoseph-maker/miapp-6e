@@ -75,6 +75,7 @@ export default function Inicio() {
   const [showSellForm, setShowSellForm] = useState(false);
   const [buyerName, setBuyerName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
+  const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
 
@@ -96,16 +97,63 @@ export default function Inicio() {
     setBuyerPhone("");
   }
 
-  function confirmPurchase() {
-    if (!buyerName.trim() || !buyerPhone.trim()) {
+  async function confirmPurchase() {
+    if (!selectedProduct) return;
+
+    const nombre = buyerName.trim();
+    const telefono = buyerPhone.trim();
+    const precio = Number(selectedProduct.price.replace(/[^\d]/g, ""));
+
+    if (!nombre || !telefono) {
       Alert.alert("Datos incompletos", "Escribe tu nombre y teléfono.");
       return;
     }
-    Alert.alert(
-      "Solicitud enviada",
-      `Gracias, ${buyerName.trim()}. Te contactaremos pronto.`,
-    );
-    closePurchase();
+    if (!/^[+0-9][0-9 ()-]{6,19}$/.test(telefono)) {
+      Alert.alert("Teléfono no válido", "Revisa el número e inténtalo de nuevo.");
+      return;
+    }
+    if (!Number.isSafeInteger(precio) || precio <= 0) {
+      Alert.alert("Artículo no válido", "No se pudo leer el precio del artículo.");
+      return;
+    }
+    if (!supabase) {
+      Alert.alert("Sin conexión", "No está configurada la conexión con Supabase.");
+      return;
+    }
+
+    setEnviandoSolicitud(true);
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const { error } = await supabase.from("vitrina_solicitudes_compra").insert({
+        articulo_id: null,
+        articulo_nombre: selectedProduct.name,
+        articulo_categoria: selectedProduct.category,
+        articulo_precio: precio,
+        articulo_epoca: selectedProduct.period,
+        usuario_id: sessionData.session?.user.id ?? null,
+        comprador_nombre: nombre,
+        comprador_telefono: telefono,
+      });
+      if (error) throw error;
+
+      Alert.alert(
+        "Solicitud enviada",
+        "Gracias, " + nombre + ". Te contactaremos pronto.",
+      );
+      closePurchase();
+    } catch (error) {
+      Alert.alert(
+        "No se pudo guardar la solicitud",
+        error instanceof Error
+          ? error.message
+          : "Revisa tu conexión e inténtalo de nuevo.",
+      );
+    } finally {
+      setEnviandoSolicitud(false);
+    }
   }
 
   async function publishProduct() {
@@ -338,8 +386,14 @@ export default function Inicio() {
               placeholder="300 000 0000"
               keyboardType="phone-pad"
             />
-            <Pressable style={styles.primaryButton} onPress={confirmPurchase}>
-              <Text style={styles.primaryButtonText}>Enviar solicitud</Text>
+            <Pressable
+              disabled={enviandoSolicitud}
+              style={styles.primaryButton}
+              onPress={() => void confirmPurchase()}
+            >
+              <Text style={styles.primaryButtonText}>
+                {enviandoSolicitud ? "Guardando solicitud..." : "Enviar solicitud"}
+              </Text>
             </Pressable>
           </View>
         </View>

@@ -134,3 +134,193 @@ drop trigger if exists al_crear_usuario_perfil on auth.users;
 create trigger al_crear_usuario_perfil
   after insert on auth.users
   for each row execute function public.crear_perfil_usuario();
+
+revoke execute on function public.crear_perfil_usuario()
+  from public, anon, authenticated;
+-- ====================================================================
+-- 4. REGISTROS DE CUENTA Y SOLICITUDES DE COMPRA DE LA VITRINA
+-- ====================================================================
+
+create table if not exists public.vitrina_registros (
+  id uuid primary key default gen_random_uuid(),
+  usuario_id uuid not null unique references auth.users (id) on delete cascade,
+  nombre text not null check (char_length(btrim(nombre)) between 1 and 120),
+  correo text not null check (
+    char_length(correo) <= 254
+    and correo ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
+  ),
+  telefono text not null check (telefono ~ '^[+0-9][0-9 ()-]{6,19}$'),
+  ciudad text not null check (char_length(btrim(ciudad)) between 1 and 120),
+  created_at timestamptz not null default now()
+);
+
+alter table public.vitrina_registros
+  add column if not exists usuario_id uuid references auth.users (id) on delete cascade;
+create unique index if not exists vitrina_registros_usuario_id_key
+  on public.vitrina_registros (usuario_id);
+alter table public.vitrina_registros
+  alter column usuario_id set not null;
+
+alter table public.vitrina_registros enable row level security;
+drop policy if exists vitrina_registros_submit on public.vitrina_registros;
+drop policy if exists vitrina_registros_leer_propio on public.vitrina_registros;
+create policy vitrina_registros_leer_propio
+  on public.vitrina_registros
+  for select to authenticated
+  using ((select auth.uid()) = usuario_id);
+revoke insert, update, delete on public.vitrina_registros from anon, authenticated;
+grant select on public.vitrina_registros to authenticated;
+
+comment on table public.vitrina_registros is
+  'Datos enviados al crear una cuenta de La Vitrina; una fila por usuario Auth.';
+comment on column public.vitrina_registros.usuario_id is
+  'Cuenta de Supabase Auth que originó este registro.';
+
+create or replace function public.guardar_registro_vitrina()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  nombre_registro text := btrim(coalesce(new.raw_user_meta_data ->> 'nombre_completo', ''));
+  telefono_registro text := btrim(coalesce(new.raw_user_meta_data ->> 'telefono', ''));
+  ciudad_registro text := btrim(coalesce(new.raw_user_meta_data ->> 'ciudad', ''));
+  correo_registro text := lower(btrim(coalesce(new.email, '')));
+begin
+  if char_length(nombre_registro) between 1 and 120
+     and char_length(ciudad_registro) between 1 and 120
+     and correo_registro ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
+     and telefono_registro ~ '^[+0-9][0-9 ()-]{6,19}$' then
+    insert into public.vitrina_registros
+      (usuario_id, nombre, correo, telefono, ciudad)
+    values
+      (new.id, nombre_registro, correo_registro, telefono_registro, ciudad_registro)
+    on conflict (usuario_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists al_crear_registro_vitrina on auth.users;
+create trigger al_crear_registro_vitrina
+  after insert on auth.users
+  for each row execute function public.guardar_registro_vitrina();
+
+revoke execute on function public.guardar_registro_vitrina()
+  from public, anon, authenticated;
+
+create table if not exists public.vitrina_solicitudes_compra (
+  id uuid primary key default gen_random_uuid(),
+  articulo_id bigint references public.articulos_vitrina (id) on delete set null,
+  articulo_nombre text not null,
+  articulo_categoria text not null
+    check (articulo_categoria in ('Muebles', 'Arte', 'Relojes', 'Decoración')),
+  articulo_precio integer not null check (articulo_precio > 0),
+  articulo_epoca text not null,
+  usuario_id uuid references auth.users (id) on delete set null,
+  comprador_nombre text not null
+    check (char_length(btrim(comprador_nombre)) between 1 and 120),
+  comprador_telefono text not null
+    check (comprador_telefono ~ '^[+0-9][0-9 ()-]{6,19}$'),
+  created_at timestamptz not null default now()
+);
+
+alter table public.vitrina_solicitudes_compra
+  alter column articulo_id drop not null;
+alter table public.vitrina_solicitudes_compra
+  add column if not exists articulo_nombre text,
+  add column if not exists articulo_categoria text,
+  add column if not exists articulo_precio integer,
+  add column if not exists articulo_epoca text,
+  add column if not exists usuario_id uuid references auth.users (id) on delete set null;
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vitrina_solicitudes_compra'
+      and column_name = 'nombre'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vitrina_solicitudes_compra'
+      and column_name = 'comprador_nombre'
+  ) then
+    alter table public.vitrina_solicitudes_compra
+      rename column nombre to comprador_nombre;
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vitrina_solicitudes_compra'
+      and column_name = 'telefono'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vitrina_solicitudes_compra'
+      and column_name = 'comprador_telefono'
+  ) then
+    alter table public.vitrina_solicitudes_compra
+      rename column telefono to comprador_telefono;
+  end if;
+end;
+$$;
+
+alter table public.vitrina_solicitudes_compra
+  alter column articulo_nombre set not null,
+  alter column articulo_categoria set not null,
+  alter column articulo_precio set not null,
+  alter column articulo_epoca set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.vitrina_solicitudes_compra'::regclass
+      and conname = 'vitrina_solicitudes_compra_articulo_categoria_check'
+  ) then
+    alter table public.vitrina_solicitudes_compra
+      add constraint vitrina_solicitudes_compra_articulo_categoria_check
+      check (articulo_categoria in ('Muebles', 'Arte', 'Relojes', 'Decoración'));
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.vitrina_solicitudes_compra'::regclass
+      and conname = 'vitrina_solicitudes_compra_articulo_precio_check'
+  ) then
+    alter table public.vitrina_solicitudes_compra
+      add constraint vitrina_solicitudes_compra_articulo_precio_check
+      check (articulo_precio > 0);
+  end if;
+end;
+$$;
+
+alter table public.vitrina_solicitudes_compra enable row level security;
+drop policy if exists vitrina_solicitudes_submit on public.vitrina_solicitudes_compra;
+drop policy if exists solicitudes_compra_anon_insertar on public.vitrina_solicitudes_compra;
+drop policy if exists solicitudes_compra_usuario_insertar on public.vitrina_solicitudes_compra;
+drop policy if exists solicitudes_compra_leer_propio on public.vitrina_solicitudes_compra;
+create policy solicitudes_compra_anon_insertar
+  on public.vitrina_solicitudes_compra
+  for insert to anon
+  with check (usuario_id is null);
+create policy solicitudes_compra_usuario_insertar
+  on public.vitrina_solicitudes_compra
+  for insert to authenticated
+  with check (usuario_id is null or usuario_id = (select auth.uid()));
+create policy solicitudes_compra_leer_propio
+  on public.vitrina_solicitudes_compra
+  for select to authenticated
+  using (usuario_id = (select auth.uid()));
+revoke update, delete on public.vitrina_solicitudes_compra from anon, authenticated;
+grant insert on public.vitrina_solicitudes_compra to anon;
+grant select, insert on public.vitrina_solicitudes_compra to authenticated;
+
+comment on table public.vitrina_solicitudes_compra is
+  'Solicitudes de compra enviadas desde La Vitrina.';
+comment on column public.vitrina_solicitudes_compra.comprador_nombre is
+  'Nombre de la persona que solicita la compra.';
+comment on column public.vitrina_solicitudes_compra.articulo_nombre is
+  'Nombre del artículo seleccionado, conservado como copia del formulario.';
