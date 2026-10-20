@@ -103,3 +103,37 @@ test('a new email identity still follows the email confirmation flow', async () 
   assert.equal(await api.signUp(user.email, 'test-password', 'Test'), null);
   assert.equal(api.authError({ message: 'User already registered' }), 'Correo registrado. Inicia sesión con tu cuenta.');
 });
+
+test('signup without email confirmation immediately establishes an authenticated session', async () => {
+  const { api, client, requests } = service(() => json({ ...session, user: { ...user, identities: [] } }));
+  const created = await api.signUp(' TEST@example.invalid ', 'test-password', 'Test');
+  assert.equal(created.user.id, userId);
+  assert.equal((await client.auth.getSession()).data.session.user.id, userId);
+  assert.equal(requests.length, 1);
+  assert.match(requests[0].url, /\/signup$/);
+  assert.equal(JSON.parse(requests[0].body).email, 'test@example.invalid');
+});
+
+test('signup, duplicate signup and login preserve a single account with normalized email', async () => {
+  const accounts = new Map();
+  const { api, client } = service(request => {
+    if (request.url.includes('/logout')) return new Response(null, { status: 204 });
+    const input = JSON.parse(request.body);
+    if (request.url.includes('/signup')) {
+      if (accounts.has(input.email)) return json({ code: 'user_already_exists', msg: 'User already registered' }, 422);
+      accounts.set(input.email, input.password);
+      return json(session);
+    }
+    if (request.url.includes('/token') && accounts.get(input.email) === input.password) return json(session);
+    return json({ code: 'invalid_credentials', msg: 'Invalid login credentials' }, 400);
+  });
+  const created = await api.signUp(' TEST@example.invalid ', 'test-password', 'Test');
+  await api.signOut();
+  await assert.rejects(api.signUp('test@EXAMPLE.invalid', 'different-password', 'Other'), error => error.code === 'user_already_exists');
+  assert.equal(accounts.size, 1);
+  assert.equal((await client.auth.getSession()).data.session, null);
+  await assert.rejects(api.signIn(user.email, 'different-password'), error => error.code === 'invalid_credentials');
+  const signedIn = await api.signIn(' TEST@example.invalid ', 'test-password');
+  assert.equal(signedIn.user.id, created.user.id);
+  assert.equal(accounts.size, 1);
+});

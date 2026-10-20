@@ -31,7 +31,7 @@ export async function signUp(email: string, password: string, name: string) {
   if (error) throw error;
   // With confirmation enabled, an existing confirmed account can be returned
   // as an obfuscated user with no identities instead of an API error.
-  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+  if (!data.session && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
     throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
   }
   return data.session;
