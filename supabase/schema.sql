@@ -324,3 +324,34 @@ comment on column public.vitrina_solicitudes_compra.comprador_nombre is
   'Nombre de la persona que solicita la compra.';
 comment on column public.vitrina_solicitudes_compra.articulo_nombre is
   'Nombre del artículo seleccionado, conservado como copia del formulario.';
+
+-- TABLA: vitrina_contenidos (Categorías y colecciones públicas)
+create table if not exists public.vitrina_contenidos (
+  codigo text primary key check (char_length(btrim(codigo)) > 0),
+  titulo text not null check (char_length(btrim(titulo)) > 0),
+  descripcion text not null check (char_length(btrim(descripcion)) > 0),
+  detalle text not null check (char_length(btrim(detalle)) > 0)
+);
+
+alter table public.vitrina_contenidos enable row level security;
+drop policy if exists vitrina_contenidos_lectura_publica
+  on public.vitrina_contenidos;
+create policy vitrina_contenidos_lectura_publica
+  on public.vitrina_contenidos
+  for select
+  to anon, authenticated
+  using (true);
+
+revoke all on table public.vitrina_contenidos from anon, authenticated;
+grant select on table public.vitrina_contenidos to anon, authenticated;
+
+comment on table public.vitrina_contenidos is
+  'Contenido público de categorías y colecciones de La Vitrina.';
+comment on column public.vitrina_contenidos.codigo is
+  'Código único del contenido.';
+comment on column public.vitrina_contenidos.titulo is
+  'Título visible de la categoría o colección.';
+comment on column public.vitrina_contenidos.descripcion is
+  'Descripción breve del contenido.';
+comment on column public.vitrina_contenidos.detalle is
+  'Información ampliada de la categoría o colección.';
