@@ -23,6 +23,13 @@ export type PerfilUsuario = {
   created_at: string;
 };
 
+export type VitrinaContenido = {
+  codigo: string;
+  titulo: string;
+  descripcion: string;
+  detalle: string;
+};
+
 type ArticuloVitrinaInsert = Omit<ArticuloVitrina, "id" | "created_at">;
 
 type Database = {
@@ -33,6 +40,12 @@ type Database = {
         Insert: ArticuloVitrinaInsert &
           Partial<Pick<ArticuloVitrina, "id" | "created_at">>;
         Update: Partial<ArticuloVitrinaInsert>;
+        Relationships: [];
+      };
+      vitrina_contenidos: {
+        Row: VitrinaContenido;
+        Insert: VitrinaContenido;
+        Update: Partial<VitrinaContenido>;
         Relationships: [];
       };
       perfiles_usuario: {

@@ -319,6 +319,16 @@ export default function Inicio() {
         </View>
         <Pressable
           accessibilityRole="button"
+          onPress={() => router.push("/catálogo")}
+          style={({ pressed }) => [
+            styles.vitrinaLink,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.vitrinaLinkText}>Ver catálogo de colecciones</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.vitrinaLink,
             pressed && styles.pressed,
