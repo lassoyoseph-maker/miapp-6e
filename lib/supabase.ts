@@ -23,14 +23,18 @@ export type PerfilUsuario = {
   created_at: string;
 };
 
-export type VitrinaContenido = {
+export type VitrinaCatalogoItem = {
   codigo: string;
   titulo: string;
   descripcion: string;
   detalle: string;
+  precio: number | null;
 };
 
 type ArticuloVitrinaInsert = Omit<ArticuloVitrina, "id" | "created_at">;
+type VitrinaCatalogoItemInsert = Omit<VitrinaCatalogoItem, "precio"> & {
+  precio?: number | null;
+};
 
 type Database = {
   public: {
@@ -42,10 +46,10 @@ type Database = {
         Update: Partial<ArticuloVitrinaInsert>;
         Relationships: [];
       };
-      vitrina_contenidos: {
-        Row: VitrinaContenido;
-        Insert: VitrinaContenido;
-        Update: Partial<VitrinaContenido>;
+      vitrina_catalogo: {
+        Row: VitrinaCatalogoItem;
+        Insert: VitrinaCatalogoItemInsert;
+        Update: Partial<VitrinaCatalogoItemInsert>;
         Relationships: [];
       };
       perfiles_usuario: {

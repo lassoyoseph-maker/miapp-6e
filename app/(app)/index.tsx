@@ -2,15 +2,15 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -109,15 +109,24 @@ export default function Inicio() {
       return;
     }
     if (!/^[+0-9][0-9 ()-]{6,19}$/.test(telefono)) {
-      Alert.alert("Teléfono no válido", "Revisa el número e inténtalo de nuevo.");
+      Alert.alert(
+        "Teléfono no válido",
+        "Revisa el número e inténtalo de nuevo.",
+      );
       return;
     }
     if (!Number.isSafeInteger(precio) || precio <= 0) {
-      Alert.alert("Artículo no válido", "No se pudo leer el precio del artículo.");
+      Alert.alert(
+        "Artículo no válido",
+        "No se pudo leer el precio del artículo.",
+      );
       return;
     }
     if (!supabase) {
-      Alert.alert("Sin conexión", "No está configurada la conexión con Supabase.");
+      Alert.alert(
+        "Sin conexión",
+        "No está configurada la conexión con Supabase.",
+      );
       return;
     }
 
@@ -127,16 +136,18 @@ export default function Inicio() {
         await supabase.auth.getSession();
       if (sessionError) throw sessionError;
 
-      const { error } = await supabase.from("vitrina_solicitudes_compra").insert({
-        articulo_id: null,
-        articulo_nombre: selectedProduct.name,
-        articulo_categoria: selectedProduct.category,
-        articulo_precio: precio,
-        articulo_epoca: selectedProduct.period,
-        usuario_id: sessionData.session?.user.id ?? null,
-        comprador_nombre: nombre,
-        comprador_telefono: telefono,
-      });
+      const { error } = await supabase
+        .from("vitrina_solicitudes_compra")
+        .insert({
+          articulo_id: null,
+          articulo_nombre: selectedProduct.name,
+          articulo_categoria: selectedProduct.category,
+          articulo_precio: precio,
+          articulo_epoca: selectedProduct.period,
+          usuario_id: sessionData.session?.user.id ?? null,
+          comprador_nombre: nombre,
+          comprador_telefono: telefono,
+        });
       if (error) throw error;
 
       Alert.alert(
@@ -325,7 +336,9 @@ export default function Inicio() {
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.vitrinaLinkText}>Ver catálogo de colecciones</Text>
+          <Text style={styles.vitrinaLinkText}>
+            Catálogo
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -402,7 +415,9 @@ export default function Inicio() {
               onPress={() => void confirmPurchase()}
             >
               <Text style={styles.primaryButtonText}>
-                {enviandoSolicitud ? "Guardando solicitud..." : "Enviar solicitud"}
+                {enviandoSolicitud
+                  ? "Guardando solicitud..."
+                  : "Enviar solicitud"}
               </Text>
             </Pressable>
           </View>
