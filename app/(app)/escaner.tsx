@@ -1,17 +1,17 @@
-import { useRef, useState } from "react";
-import { useRouter } from "expo-router";
 import {
-  CameraView,
-  useCameraPermissions,
-  type BarcodeScanningResult,
+    CameraView,
+    useCameraPermissions,
+    type BarcodeScanningResult,
 } from "expo-camera";
+import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Linking,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -59,7 +59,10 @@ export default function Escaner() {
         return;
       }
 
-      router.replace({ pathname: "/detalle", params: { codigo: coleccion.codigo } });
+      router.replace({
+        pathname: "/detalle",
+        params: { codigo: coleccion.codigo },
+      });
     } catch (error) {
       console.error("Error al consultar el código QR:", error);
       setMensaje("No se pudo consultar Supabase. Intenta escanear de nuevo.");
@@ -97,7 +100,10 @@ export default function Escaner() {
             <Pressable
               accessibilityRole="button"
               onPress={() => void solicitarPermiso()}
-              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.buttonText}>Permitir cámara</Text>
             </Pressable>
@@ -105,7 +111,10 @@ export default function Escaner() {
             <Pressable
               accessibilityRole="button"
               onPress={() => void Linking.openSettings()}
-              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.buttonText}>Abrir ajustes</Text>
             </Pressable>
