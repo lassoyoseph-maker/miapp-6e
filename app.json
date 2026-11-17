@@ -10,7 +10,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.lassoyoseph.miapp6e"
+      "package": "com.lassoyoseph.miapp6e",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "version": "1.0.0",
     "orientation": "portrait",
@@ -42,7 +45,8 @@
           "cameraPermission": "La Vitrina necesita acceso a la cámara para leer códigos QR.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": false,

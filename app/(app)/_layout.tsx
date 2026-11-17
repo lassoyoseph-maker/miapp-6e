@@ -10,7 +10,7 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: "#F8F3EC" },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "La Vitrina" }} />
+      <Stack.Screen name="inicio" options={{ title: "La Vitrina" }} />
       <Stack.Screen
         name="formulario"
         options={{ title: "Registrar artículo" }}
