@@ -90,10 +90,11 @@ export default function Registro() {
           : "Cuenta creada. Si Supabase solicita confirmación, revisa tu correo y luego inicia sesión.",
       );
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "";
       setMensaje(
-        error instanceof Error
-          ? error.message
-          : "No se pudo crear la cuenta. Intenta de nuevo.",
+        errorMessage.toLowerCase() === "failed to fetch"
+          ? "No se pudo conectar con Supabase. Verifica tu conexión a internet y vuelve a intentarlo."
+          : errorMessage || "No se pudo crear la cuenta. Intenta de nuevo.",
       );
     } finally {
       setRegistrando(false);

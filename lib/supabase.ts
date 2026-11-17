@@ -70,7 +70,9 @@ type Database = {
 const supabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL ??
   "https://bprerqyiorgovbponcdw.supabase.co";
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 const authStorage =
   Platform.OS === "web"
@@ -93,7 +95,7 @@ const authStorage =
 export const supabaseConfigError = !supabaseUrl
   ? "Falta EXPO_PUBLIC_SUPABASE_URL en .env.local."
   : !supabaseAnonKey
-    ? "Falta la clave pública de Supabase en esta compilación. En desarrollo usa EXPO_PUBLIC_SUPABASE_ANON_KEY en .env.local; para un APK crea esa variable en EAS y vuelve a compilar."
+    ? "Falta la clave pública de Supabase en esta compilación. Configura EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY o EXPO_PUBLIC_SUPABASE_ANON_KEY en .env.local y en el entorno de EAS usado para compilar."
     : "";
 
 export const supabase =
