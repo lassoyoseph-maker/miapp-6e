@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  type ImageSourcePropType,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +19,13 @@ import {
   supabase,
   supabaseConfigError,
 } from "@/lib/supabase";
+
+const imagenesQr: Record<string, ImageSourcePropType> = {
+  "ANT-001": require("../../assets/qr/ANT-001.png"),
+  "ANT-002": require("../../assets/qr/ANT-002.png"),
+  "ANT-003": require("../../assets/qr/ANT-003.png"),
+  "ANT-004": require("../../assets/qr/ANT-004.png"),
+};
 
 function formatearPrecio(precio: number | null) {
   if (precio === null) return null;
@@ -54,7 +63,9 @@ export default function Catalogo() {
     try {
       setContenidos(await consultarCatalogo());
     } catch (consultaError) {
-      setError(mensajeDeError(consultaError, "No se pudo consultar el catálogo."));
+      setError(
+        mensajeDeError(consultaError, "No se pudo consultar el catálogo."),
+      );
     } finally {
       setCargando(false);
       setActualizando(false);
@@ -104,6 +115,16 @@ export default function Catalogo() {
             <Text style={styles.subtitle}>
               Descubre colecciones con historia, carácter y detalles únicos.
             </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/escaner")}
+              style={({ pressed }) => [
+                styles.scanButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.scanButtonText}>Escanear código QR</Text>
+            </Pressable>
             {error && contenidos.length > 0 ? (
               <Text accessibilityRole="alert" style={styles.error}>
                 {error}
@@ -233,7 +254,8 @@ export function DetalleProducto() {
 
         if (!vigente) return;
         if (consultaError) setError(consultaError.message);
-        else if (!data) setError("No encontramos esta colección en el catálogo.");
+        else if (!data)
+          setError("No encontramos esta colección en el catálogo.");
         else setContenido(data);
       } catch (consultaError) {
         if (!vigente) return;
@@ -282,6 +304,21 @@ export function DetalleProducto() {
             <Text style={styles.detailLabel}>Especificaciones</Text>
             <Text style={styles.detailText}>{contenido.detalle}</Text>
 
+            {imagenesQr[contenido.codigo] ? (
+              <View style={styles.qrSection}>
+                <Text style={styles.detailLabel}>Código QR de la colección</Text>
+                <Image
+                  accessibilityLabel={`Código QR para ${contenido.codigo}`}
+                  source={imagenesQr[contenido.codigo]}
+                  resizeMode="contain"
+                  style={styles.qrImage}
+                />
+                <Text style={styles.qrCaption}>
+                  Este código contiene solo el identificador de la colección.
+                </Text>
+              </View>
+            ) : null}
+
             {contenido.precio !== null ? (
               <>
                 <View style={styles.divider} />
@@ -297,7 +334,10 @@ export function DetalleProducto() {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.replace("/catálogo")}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.pressed,
+          ]}
         >
           <Text style={styles.backButtonText}>Volver al catálogo</Text>
         </Pressable>
@@ -318,6 +358,16 @@ const styles = StyleSheet.create({
   },
   title: { color: "#382B16", fontSize: 28, fontWeight: "800", marginTop: 7 },
   subtitle: { color: "#756B5D", fontSize: 15, lineHeight: 22, marginTop: 6 },
+  scanButton: {
+    alignSelf: "flex-start",
+    borderColor: "#D7C7A8",
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  scanButtonText: { color: "#563D1B", fontSize: 14, fontWeight: "800" },
   error: { color: "#A23E32", fontSize: 13, lineHeight: 20, marginTop: 12 },
   card: {
     backgroundColor: "#FFFDF8",
@@ -333,7 +383,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   code: { color: "#A27B4E", fontSize: 12, fontWeight: "800", letterSpacing: 1 },
-  cardTitle: { color: "#382B16", fontSize: 19, fontWeight: "800", marginTop: 7 },
+  cardTitle: {
+    color: "#382B16",
+    fontSize: 19,
+    fontWeight: "800",
+    marginTop: 7,
+  },
   description: { color: "#756B5D", fontSize: 14, lineHeight: 21, marginTop: 6 },
   price: { color: "#563D1B", fontSize: 15, fontWeight: "800" },
   detailsButton: { alignSelf: "flex-start", marginTop: 12, paddingVertical: 4 },
@@ -344,8 +399,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  emptyTitle: { color: "#382B16", fontSize: 18, fontWeight: "800", textAlign: "center" },
-  emptyText: { color: "#756B5D", lineHeight: 21, marginTop: 10, textAlign: "center" },
+  emptyTitle: {
+    color: "#382B16",
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  emptyText: {
+    color: "#756B5D",
+    lineHeight: 21,
+    marginTop: 10,
+    textAlign: "center",
+  },
   retryButton: {
     backgroundColor: "#846B46",
     borderRadius: 10,
@@ -373,10 +438,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 22,
   },
-  detailTitle: { color: "#382B16", fontSize: 28, fontWeight: "800", marginTop: 9 },
-  detailLabel: { color: "#563D1B", fontSize: 14, fontWeight: "800", marginTop: 20 },
+  detailTitle: {
+    color: "#382B16",
+    fontSize: 28,
+    fontWeight: "800",
+    marginTop: 9,
+  },
+  detailLabel: {
+    color: "#563D1B",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 20,
+  },
   detailText: { color: "#5F574A", fontSize: 15, lineHeight: 24, marginTop: 7 },
-  detailPrice: { color: "#846B46", fontSize: 22, fontWeight: "800", marginTop: 7 },
+  qrSection: { alignItems: "center", marginTop: 20 },
+  qrImage: { height: 190, marginTop: 10, width: 190 },
+  qrCaption: {
+    color: "#756B5D",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  detailPrice: {
+    color: "#846B46",
+    fontSize: 22,
+    fontWeight: "800",
+    marginTop: 7,
+  },
   divider: { backgroundColor: "#E5D9C6", height: 1, marginTop: 20 },
   backButton: {
     alignItems: "center",

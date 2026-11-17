@@ -342,6 +342,16 @@ export default function Inicio() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
+          onPress={() => router.push("/escaner")}
+          style={({ pressed }) => [
+            styles.vitrinaLink,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.vitrinaLinkText}>Escanear código QR</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.vitrinaLink,
             pressed && styles.pressed,
