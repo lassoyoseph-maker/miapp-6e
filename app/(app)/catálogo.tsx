@@ -27,6 +27,13 @@ const imagenesQr: Record<string, ImageSourcePropType> = {
   "ANT-004": require("../../assets/qr/ANT-004.png"),
 };
 
+const imagenesProducto: Record<string, ImageSourcePropType> = {
+  "ANT-001": require("../../assets/productos/ANT-001.jpg"),
+  "ANT-002": require("../../assets/productos/ANT-002.jpg"),
+  "ANT-003": require("../../assets/productos/ANT-003.jpg"),
+  "ANT-004": require("../../assets/productos/ANT-004.jpg"),
+};
+
 function formatearPrecio(precio: number | null) {
   if (precio === null) return null;
   return `$${Number(precio).toLocaleString("es-CO")}`;
@@ -173,9 +180,13 @@ export default function Catalogo() {
                 <Text style={styles.code}>{item.codigo}</Text>
                 {precio ? <Text style={styles.price}>{precio}</Text> : null}
               </View>
-              {item.imagen_url ? (
+              {imagenesProducto[item.codigo] || item.imagen_url ? (
                 <Image
-                  source={{ uri: item.imagen_url }}
+                  source={
+                    imagenesProducto[item.codigo] ?? {
+                      uri: item.imagen_url ?? undefined,
+                    }
+                  }
                   resizeMode="cover"
                   style={styles.productImage}
                 />
@@ -302,10 +313,14 @@ export function DetalleProducto() {
           <View style={styles.detailCard}>
             <Text style={styles.eyebrow}>COLECCIÓN · {contenido.codigo}</Text>
             <Text style={styles.detailTitle}>{contenido.titulo}</Text>
-            {contenido.imagen_url ? (
+            {imagenesProducto[contenido.codigo] || contenido.imagen_url ? (
               <Image
                 accessibilityLabel={`Imagen de ${contenido.titulo}`}
-                source={{ uri: contenido.imagen_url }}
+                source={
+                  imagenesProducto[contenido.codigo] ?? {
+                    uri: contenido.imagen_url ?? undefined,
+                  }
+                }
                 resizeMode="cover"
                 style={styles.detailProductImage}
               />
