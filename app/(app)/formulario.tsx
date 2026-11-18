@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -24,14 +24,6 @@ const categorias: CategoriaArticulo[] = [
   "Decoración",
 ];
 
-const preparacionesCafe = [
-  "Espresso",
-  "Filtrado",
-  "Prensa francesa",
-  "Cold Brew",
-  "Otro",
-];
-
 const imagenesPorCategoria: Record<CategoriaArticulo, string> = {
   Muebles: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900",
   Arte: "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900",
@@ -42,27 +34,11 @@ const imagenesPorCategoria: Record<CategoriaArticulo, string> = {
 
 export default function Formulario() {
   const router = useRouter();
-  const searchParams = useLocalSearchParams<{ tab?: string }>();
-
-  // Modo: 'articulo' (La Vitrina) o 'cafe' (Coffee App - Lab 2)
-  const [modo, setModo] = useState<"articulo" | "cafe">(
-    searchParams.tab === "cafe" ? "cafe" : "articulo",
-  );
-
-  // Estados para Artículo (La Vitrina)
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState<CategoriaArticulo>("Muebles");
   const [precio, setPrecio] = useState("");
   const [epoca, setEpoca] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
-
-  // Estados para Coffee Lover (Laboratorio 2)
-  const [nombreCafe, setNombreCafe] = useState("");
-  const [correoCafe, setCorreoCafe] = useState("");
-  const [telefonoCafe, setTelefonoCafe] = useState("");
-  const [ciudadCafe, setCiudadCafe] = useState("");
-  const [cafeFavorito, setCafeFavorito] = useState("");
-  const [tipoPreparacion, setTipoPreparacion] = useState("Filtrado");
 
   const [guardando, setGuardando] = useState(false);
   const [mensajeError, setMensajeError] = useState("");
@@ -112,7 +88,6 @@ export default function Formulario() {
       router.push({
         pathname: "/resultado",
         params: {
-          tipo: "articulo",
           id: String(data.id),
           nombre: data.nombre,
           categoria: data.categoria,
@@ -134,286 +109,90 @@ export default function Formulario() {
     }
   }
 
-  async function guardarCoffeeLover() {
-    if (
-      !nombreCafe.trim() ||
-      !correoCafe.trim() ||
-      !telefonoCafe.trim() ||
-      !ciudadCafe.trim() ||
-      !cafeFavorito.trim() ||
-      !tipoPreparacion.trim()
-    ) {
-      setMensajeError("Todos los campos de Coffee Lover son obligatorios.");
-      return;
-    }
-    if (!supabase) {
-      setMensajeError(supabaseConfigError);
-      return;
-    }
-
-    setMensajeError("");
-    setGuardando(true);
-    try {
-      const { data, error } = await supabase
-        .from("clientes_cafe")
-        .insert({
-          nombre: nombreCafe.trim(),
-          correo: correoCafe.trim().toLowerCase(),
-          telefono: telefonoCafe.trim(),
-          ciudad: ciudadCafe.trim(),
-          cafe_favorito: cafeFavorito.trim(),
-          tipo_preparacion: tipoPreparacion.trim(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      router.push({
-        pathname: "/resultado",
-        params: {
-          tipo: "cafe",
-          id: String(data.id),
-          nombre: data.nombre,
-          correo: data.correo,
-          telefono: data.telefono,
-          ciudad: data.ciudad,
-          cafeFavorito: data.cafe_favorito,
-          tipoPreparacion: data.tipo_preparacion,
-        },
-      });
-    } catch (error) {
-      const errorMessage = obtenerMensajeError(error);
-      setMensajeError(
-        errorMessage.includes("clientes_cafe") &&
-          errorMessage.toLowerCase().includes("schema cache")
-          ? "Falta crear la tabla clientes_cafe en Supabase. Ejecuta el contenido de supabase/schema.sql en SQL Editor y vuelve a intentar."
-          : errorMessage,
-      );
-    } finally {
-      setGuardando(false);
-    }
-  }
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.eyebrow}>
-          {modo === "articulo"
-            ? "LA VITRINA · NUEVO ARTÍCULO"
-            : "LABORATORIO 2 · COFFEE APP"}
-        </Text>
-        <Text style={styles.title}>
-          {modo === "articulo"
-            ? "Registrar artículo"
-            : "Registrar Coffee Lover"}
-        </Text>
+        <Text style={styles.eyebrow}>LA VITRINA · NUEVO ARTÍCULO</Text>
+        <Text style={styles.title}>Registrar artículo</Text>
         <Text style={styles.subtitle}>
-          {modo === "articulo"
-            ? "Guarda una pieza del catálogo en la base de datos de Supabase."
-            : "Persiste en Supabase nombre, café favorito y tipo de preparación."}
+          Guarda una pieza del catálogo en la base de datos de Supabase.
         </Text>
 
-        {/* Selector de modo */}
-        <View style={styles.modeTabs}>
+        <View style={styles.form}>
+          <Campo
+            label="Nombre del artículo"
+            value={nombre}
+            onChangeText={setNombre}
+            placeholder="Ej. Sillón francés de terciopelo"
+          />
+          <Text style={styles.label}>Categoría</Text>
+          <View style={styles.options}>
+            {categorias.map((item) => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: categoria === item }}
+                key={item}
+                onPress={() => setCategoria(item)}
+                style={[
+                  styles.option,
+                  categoria === item && styles.optionSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    categoria === item && styles.optionTextSelected,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Campo
+            label="Precio (COP)"
+            value={precio}
+            onChangeText={setPrecio}
+            placeholder="1280000"
+            keyboardType="numeric"
+          />
+          <Campo
+            label="Época o antigüedad"
+            value={epoca}
+            onChangeText={setEpoca}
+            placeholder="Ej. Años 50 o Siglo XIX"
+          />
+          <Campo
+            label="URL de imagen (opcional)"
+            value={imagenUrl}
+            onChangeText={setImagenUrl}
+            placeholder="https://..."
+            autoCapitalize="none"
+          />
+          {mensajeError ? (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {mensajeError}
+            </Text>
+          ) : null}
           <Pressable
-            onPress={() => {
-              setModo("articulo");
-              setMensajeError("");
-            }}
-            style={[
-              styles.modeTab,
-              modo === "articulo" && styles.modeTabSelected,
+            accessibilityRole="button"
+            disabled={guardando}
+            onPress={() => void guardarArticulo()}
+            style={({ pressed }) => [
+              styles.button,
+              (pressed || guardando) && styles.buttonPressed,
             ]}
           >
-            <Text
-              style={[
-                styles.modeTabText,
-                modo === "articulo" && styles.modeTabTextSelected,
-              ]}
-            >
-              Artículo (La Vitrina)
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setModo("cafe");
-              setMensajeError("");
-            }}
-            style={[styles.modeTab, modo === "cafe" && styles.modeTabSelected]}
-          >
-            <Text
-              style={[
-                styles.modeTabText,
-                modo === "cafe" && styles.modeTabTextSelected,
-              ]}
-            >
-              ☕ Coffee Lover (Lab 2)
-            </Text>
+            {guardando ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Guardar en Supabase</Text>
+            )}
           </Pressable>
         </View>
-
-        {modo === "articulo" ? (
-          <View style={styles.form}>
-            <Campo
-              label="Nombre del artículo"
-              value={nombre}
-              onChangeText={setNombre}
-              placeholder="Ej. Sillón francés de terciopelo"
-            />
-            <Text style={styles.label}>Categoría</Text>
-            <View style={styles.options}>
-              {categorias.map((item) => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: categoria === item }}
-                  key={item}
-                  onPress={() => setCategoria(item)}
-                  style={[
-                    styles.option,
-                    categoria === item && styles.optionSelected,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      categoria === item && styles.optionTextSelected,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            <Campo
-              label="Precio (COP)"
-              value={precio}
-              onChangeText={setPrecio}
-              placeholder="1280000"
-              keyboardType="numeric"
-            />
-            <Campo
-              label="Época o antigüedad"
-              value={epoca}
-              onChangeText={setEpoca}
-              placeholder="Ej. Años 50 o Siglo XIX"
-            />
-            <Campo
-              label="URL de imagen (opcional)"
-              value={imagenUrl}
-              onChangeText={setImagenUrl}
-              placeholder="https://..."
-              autoCapitalize="none"
-            />
-            {mensajeError ? (
-              <Text accessibilityRole="alert" style={styles.error}>
-                {mensajeError}
-              </Text>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              disabled={guardando}
-              onPress={() => void guardarArticulo()}
-              style={({ pressed }) => [
-                styles.button,
-                (pressed || guardando) && styles.buttonPressed,
-              ]}
-            >
-              {guardando ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Guardar en Supabase</Text>
-              )}
-            </Pressable>
-          </View>
-        ) : (
-          <View style={styles.form}>
-            <Campo
-              label="Nombre"
-              value={nombreCafe}
-              onChangeText={setNombreCafe}
-              placeholder="Ej: Laura Gómez"
-            />
-            <Campo
-              label="Correo"
-              value={correoCafe}
-              onChangeText={setCorreoCafe}
-              placeholder="Ej: laura@gmail.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Campo
-              label="Teléfono"
-              value={telefonoCafe}
-              onChangeText={setTelefonoCafe}
-              placeholder="Ej: 3001234567"
-              keyboardType="phone-pad"
-            />
-            <Campo
-              label="Ciudad"
-              value={ciudadCafe}
-              onChangeText={setCiudadCafe}
-              placeholder="Ej: Pasto"
-            />
-            <Campo
-              label="Café favorito"
-              value={cafeFavorito}
-              onChangeText={setCafeFavorito}
-              placeholder="Ej: Cappuccino"
-            />
-            <Text style={styles.label}>
-              Tipo de preparación (Actividad Final)
-            </Text>
-            <View style={styles.options}>
-              {preparacionesCafe.map((item) => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: tipoPreparacion === item }}
-                  key={item}
-                  onPress={() => setTipoPreparacion(item)}
-                  style={[
-                    styles.option,
-                    tipoPreparacion === item && styles.optionSelected,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      tipoPreparacion === item && styles.optionTextSelected,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            {mensajeError ? (
-              <Text accessibilityRole="alert" style={styles.error}>
-                {mensajeError}
-              </Text>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              disabled={guardando}
-              onPress={() => void guardarCoffeeLover()}
-              style={({ pressed }) => [
-                styles.button,
-                (pressed || guardando) && styles.buttonPressed,
-              ]}
-            >
-              {guardando ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  Guardar Coffee Lover en Supabase
-                </Text>
-              )}
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -469,30 +248,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginTop: 5,
     marginBottom: 16,
-  },
-  modeTabs: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
-  },
-  modeTab: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: "#EFE6D8",
-    alignItems: "center",
-  },
-  modeTabSelected: {
-    backgroundColor: "#846B46",
-  },
-  modeTabText: {
-    color: "#685B4F",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  modeTabTextSelected: {
-    color: "#FFFFFF",
   },
   form: {
     backgroundColor: "#FFFAF4",

@@ -5,86 +5,43 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Resultado() {
   const router = useRouter();
   const params = useLocalSearchParams<{
-    tipo?: string | string[];
     id?: string | string[];
     nombre?: string | string[];
     categoria?: string | string[];
     precio?: string | string[];
     epoca?: string | string[];
     imagenUrl?: string | string[];
-    correo?: string | string[];
-    telefono?: string | string[];
-    ciudad?: string | string[];
-    cafeFavorito?: string | string[];
-    tipoPreparacion?: string | string[];
   }>();
-
-  const esCafe =
-    valor(params.tipo) === "cafe" || Boolean(valor(params.cafeFavorito));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>
-          {esCafe
-            ? "LABORATORIO 2 · REGISTRO EXITOSO"
-            : "LA VITRINA · REGISTRO GUARDADO"}
-        </Text>
-        <Text style={styles.title}>
-          {esCafe ? "Coffee Lover registrado" : "Artículo registrado"}
-        </Text>
+        <Text style={styles.eyebrow}>LA VITRINA · REGISTRO GUARDADO</Text>
+        <Text style={styles.title}>Artículo registrado</Text>
         <Text style={styles.subtitle}>
-          {esCafe
-            ? "Los datos se guardaron permanentemente en PostgreSQL (Supabase)."
-            : "La pieza ya está guardada en la base de datos de La Vitrina."}
+          La pieza ya está guardada en la base de datos de La Vitrina.
         </Text>
 
         <View style={styles.card}>
           <Text style={styles.recordId}>Registro #{valor(params.id)}</Text>
 
-          {esCafe ? (
-            <>
-              <Dato label="Nombre" value={valor(params.nombre)} />
-              <Dato label="Correo" value={valor(params.correo)} />
-              <Dato label="Teléfono" value={valor(params.telefono)} />
-              <Dato label="Ciudad" value={valor(params.ciudad)} />
-              <Dato label="Café favorito" value={valor(params.cafeFavorito)} />
-              <Dato
-                label="Tipo de preparación"
-                value={valor(params.tipoPreparacion) || "Filtrado"}
-              />
-            </>
-          ) : (
-            <>
-              <Dato label="Artículo" value={valor(params.nombre)} />
-              <Dato label="Categoría" value={valor(params.categoria)} />
-              <Dato
-                label="Precio"
-                value={formatearPrecio(valor(params.precio))}
-              />
-              <Dato label="Época" value={valor(params.epoca)} />
-              <Dato
-                label="Imagen"
-                value={
-                  valor(params.imagenUrl) ? "Imagen vinculada" : "Sin imagen"
-                }
-              />
-            </>
-          )}
+          <Dato label="Artículo" value={valor(params.nombre)} />
+          <Dato label="Categoría" value={valor(params.categoria)} />
+          <Dato label="Precio" value={formatearPrecio(valor(params.precio))} />
+          <Dato label="Época" value={valor(params.epoca)} />
+          <Dato
+            label="Imagen"
+            value={valor(params.imagenUrl) ? "Imagen vinculada" : "Sin imagen"}
+          />
         </View>
 
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            router.push({
-              pathname: "/registros",
-              params: esCafe ? { tab: "cafe" } : { tab: "articulo" },
-            })
-          }
+          onPress={() => router.push("/registros")}
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
         >
           <Text style={styles.buttonText}>
-            {esCafe ? "Ver Coffee Lovers" : "Ver artículos registrados"}
+            Ver artículos registrados
           </Text>
         </Pressable>
 

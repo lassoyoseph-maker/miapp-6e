@@ -1,6 +1,6 @@
 # Supabase para La Vitrina
 
-La app principal sigue siendo **La Vitrina**. El módulo de actividad registra artículos del mismo catálogo (muebles, arte, relojes y decoración) en Supabase y los consulta en **Registros de artículos**. El SQL crea una tabla nueva llamada `articulos_vitrina`; no borra ni modifica tablas existentes.
+La app principal es **La Vitrina**. El catálogo registra artículos (muebles, arte, relojes y decoración) en Supabase; las pantallas de registro y consulta usan las tablas de La Vitrina.
 
 La primera pantalla es el inicio de sesión. El registro crea el usuario con Supabase Auth y un trigger guarda nombre, teléfono y ciudad en `perfiles_usuario`. La contraseña solo la administra Auth y no se almacena en esa tabla.
 
@@ -14,13 +14,9 @@ La primera pantalla es el inicio de sesión. El registro crea el usuario con Sup
 1. En el panel abre **SQL Editor → New query**.
 2. Abre `supabase/schema.sql` en este repositorio y copia todo el contenido al editor.
 3. Pulsa **Run**. El script crea de forma segura e idempotente:
-   - `clientes_cafe`: con las columnas `id`, `nombre`, `correo`, `telefono`, `ciudad`, `cafe_favorito`, `tipo_preparacion` (Actividad Final Lab 2) y sus políticas RLS.
    - `articulos_vitrina`: con `id`, `nombre`, `categoria`, `precio`, `epoca`, `imagen_url`, `created_at` y RLS.
    - `perfiles_usuario`: vinculado a `auth.users` mediante triggers y RLS por usuario.
-4. En **Table Editor**, comprueba que las tres tablas aparezcan.
-5. Si deseas cargar datos de prueba para Coffee Lovers (mínimo 3 registros requeridos en la actividad):
-   - Abre **SQL Editor → New query**.
-   - Copia y corre el contenido de `supabase/seed_clientes_cafe.sql`.
+4. En **Table Editor**, comprueba que aparezcan las tablas de La Vitrina.
 
 ## 3. Completar la conexión de la app
 

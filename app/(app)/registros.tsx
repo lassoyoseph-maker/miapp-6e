@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -14,27 +14,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   type ArticuloVitrina,
-  type ClienteCafe,
   supabase,
   supabaseConfigError,
 } from "@/lib/supabase";
 
 export default function Registros() {
   const router = useRouter();
-  const searchParams = useLocalSearchParams<{ tab?: string }>();
-
-  // Tab actual: 'articulo' o 'cafe'
-  const [tab, setTab] = useState<"articulo" | "cafe">(
-    searchParams.tab === "cafe" ? "cafe" : "articulo",
-  );
-
   const [articulos, setArticulos] = useState<ArticuloVitrina[]>([]);
-  const [clientesCafe, setClientesCafe] = useState<ClienteCafe[]>([]);
   const [cargando, setCargando] = useState(true);
   const [actualizando, setActualizando] = useState(false);
   const [mensajeError, setMensajeError] = useState("");
 
-  async function cargarDatos(refrescar = false) {
+  const cargarDatos = useCallback(async (refrescar = false) => {
     if (refrescar) setActualizando(true);
     else setCargando(true);
     setMensajeError("");
@@ -47,23 +38,13 @@ export default function Registros() {
     }
 
     try {
-      if (tab === "articulo") {
-        const { data, error } = await supabase
-          .from("articulos_vitrina")
-          .select("id, nombre, categoria, precio, epoca, imagen_url, created_at")
-          .order("id", { ascending: false });
+      const { data, error } = await supabase
+        .from("articulos_vitrina")
+        .select("id, nombre, categoria, precio, epoca, imagen_url, created_at")
+        .order("id", { ascending: false });
 
-        if (error) setMensajeError(error.message);
-        else setArticulos(data ?? []);
-      } else {
-        const { data, error } = await supabase
-          .from("clientes_cafe")
-          .select("*")
-          .order("id", { ascending: false });
-
-        if (error) setMensajeError(error.message);
-        else setClientesCafe((data as ClienteCafe[]) ?? []);
-      }
+      if (error) setMensajeError(error.message);
+      else setArticulos(data ?? []);
     } catch (error) {
       setMensajeError(
         error instanceof Error
@@ -74,208 +55,91 @@ export default function Registros() {
       setCargando(false);
       setActualizando(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void cargarDatos();
-  }, [tab]);
+  }, [cargarDatos]);
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      {/* Selector de pestañas */}
-      <View style={styles.tabsContainer}>
-        <Pressable
-          onPress={() => setTab("articulo")}
-          style={[styles.tabButton, tab === "articulo" && styles.tabButtonActive]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              tab === "articulo" && styles.tabButtonTextActive,
-            ]}
-          >
-            Artículos La Vitrina
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setTab("cafe")}
-          style={[styles.tabButton, tab === "cafe" && styles.tabButtonActive]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              tab === "cafe" && styles.tabButtonTextActive,
-            ]}
-          >
-            ☕ Coffee Lovers (Lab 2)
-          </Text>
-        </Pressable>
-      </View>
-
-      {cargando ? (
+  if (cargando) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#846B46" />
           <Text style={styles.loadingText}>
-            {tab === "articulo"
-              ? "Consultando inventario en Supabase..."
-              : "Consultando Coffee Lovers en Supabase..."}
+            Consultando inventario en Supabase...
           </Text>
         </View>
-      ) : tab === "articulo" ? (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={articulos}
-          keyExtractor={(item) => String(item.id)}
-          refreshControl={
-            <RefreshControl
-              refreshing={actualizando}
-              onRefresh={() => void cargarDatos(true)}
-              tintColor="#846B46"
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyMark}>◇</Text>
-              <Text style={styles.emptyTitle}>
-                {mensajeError ? "No se pudieron cargar" : "Aún no hay artículos"}
-              </Text>
-              <Text style={styles.emptyText}>
-                {mensajeError ||
-                  "Registra la primera pieza para iniciar el inventario en Supabase."}
-              </Text>
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/formulario",
-                    params: { tab: "articulo" },
-                  })
-                }
-                style={styles.retryButton}
-              >
-                <Text style={styles.retryText}>Registrar nuevo artículo</Text>
-              </Pressable>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <FlatList
+        contentContainerStyle={styles.listContent}
+        data={articulos}
+        keyExtractor={(item) => String(item.id)}
+        refreshControl={
+          <RefreshControl
+            refreshing={actualizando}
+            onRefresh={() => void cargarDatos(true)}
+            tintColor="#846B46"
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyMark}>◇</Text>
+            <Text style={styles.emptyTitle}>
+              {mensajeError ? "No se pudieron cargar" : "Aún no hay artículos"}
+            </Text>
+            <Text style={styles.emptyText}>
+              {mensajeError ||
+                "Registra la primera pieza para iniciar el inventario en Supabase."}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/formulario")}
+              style={styles.retryButton}
+            >
+              <Text style={styles.retryText}>Registrar nuevo artículo</Text>
+            </Pressable>
+          </View>
+        }
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={styles.eyebrow}>LA VITRINA · INVENTARIO</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>Artículos registrados</Text>
+              <Text style={styles.count}>{articulos.length}</Text>
             </View>
-          }
-          ListHeaderComponent={
-            <View style={styles.header}>
-              <Text style={styles.eyebrow}>LA VITRINA · INVENTARIO</Text>
-              <View style={styles.titleRow}>
-                <Text style={styles.title}>Artículos registrados</Text>
-                <Text style={styles.count}>{articulos.length}</Text>
-              </View>
-              <Text style={styles.subtitle}>
-                Piezas guardadas permanentemente en PostgreSQL.
+            <Text style={styles.subtitle}>
+              Piezas guardadas permanentemente en PostgreSQL.
+            </Text>
+            {mensajeError && articulos.length > 0 ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                {mensajeError}
               </Text>
-              {mensajeError && articulos.length > 0 ? (
-                <Text accessibilityRole="alert" style={styles.error}>
-                  {mensajeError}
-                </Text>
-              ) : null}
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              {item.imagen_url ? (
-                <Image source={{ uri: item.imagen_url }} style={styles.image} />
-              ) : null}
-              <View style={styles.cardContent}>
-                <Text style={styles.category}>
-                  {item.categoria.toUpperCase()}
-                </Text>
-                <Text style={styles.name}>{item.nombre}</Text>
-                <Text style={styles.period}>{item.epoca}</Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.price}>
-                    {formatearPrecio(item.precio)}
-                  </Text>
-                  <Text style={styles.recordNumber}>#{item.id}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-        />
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={clientesCafe}
-          keyExtractor={(item) => String(item.id)}
-          refreshControl={
-            <RefreshControl
-              refreshing={actualizando}
-              onRefresh={() => void cargarDatos(true)}
-              tintColor="#846B46"
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyMark}>☕</Text>
-              <Text style={styles.emptyTitle}>
-                {mensajeError
-                  ? "No se pudieron cargar"
-                  : "Aún no hay Coffee Lovers"}
-              </Text>
-              <Text style={styles.emptyText}>
-                {mensajeError ||
-                  "Añade personas al registro con su café favorito y tipo de preparación."}
-              </Text>
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/formulario",
-                    params: { tab: "cafe" },
-                  })
-                }
-                style={styles.retryButton}
-              >
-                <Text style={styles.retryText}>Registrar Coffee Lover</Text>
-              </Pressable>
-            </View>
-          }
-          ListHeaderComponent={
-            <View style={styles.header}>
-              <Text style={styles.eyebrow}>
-                LABORATORIO 2 · PERSISTENCIA SUPABASE
-              </Text>
-              <View style={styles.titleRow}>
-                <Text style={styles.title}>Coffee Lovers</Text>
-                <Text style={styles.count}>{clientesCafe.length}</Text>
-              </View>
-              <Text style={styles.subtitle}>
-                Registros almacenados en la tabla clientes_cafe.
-              </Text>
-              {mensajeError && clientesCafe.length > 0 ? (
-                <Text accessibilityRole="alert" style={styles.error}>
-                  {mensajeError}
-                </Text>
-              ) : null}
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View style={styles.cardCafe}>
-              <View style={styles.cardCafeHeader}>
-                <Text style={styles.cafeNombre}>{item.nombre}</Text>
+            ) : null}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            {item.imagen_url ? (
+              <Image source={{ uri: item.imagen_url }} style={styles.image} />
+            ) : null}
+            <View style={styles.cardContent}>
+              <Text style={styles.category}>{item.categoria.toUpperCase()}</Text>
+              <Text style={styles.name}>{item.nombre}</Text>
+              <Text style={styles.period}>{item.epoca}</Text>
+              <View style={styles.cardFooter}>
+                <Text style={styles.price}>{formatearPrecio(item.precio)}</Text>
                 <Text style={styles.recordNumber}>#{item.id}</Text>
               </View>
-              <Text style={styles.cafeDetalle}>✉ {item.correo}</Text>
-              <Text style={styles.cafeDetalle}>
-                📞 {item.telefono} · 📍 {item.ciudad}
-              </Text>
-              <View style={styles.cafeBadgeRow}>
-                <View style={styles.badgeCafe}>
-                  <Text style={styles.badgeCafeText}>
-                    ☕ {item.cafe_favorito}
-                  </Text>
-                </View>
-                <View style={styles.badgeMetodo}>
-                  <Text style={styles.badgeMetodoText}>
-                    🌱 {item.tipo_preparacion || "Filtrado"}
-                  </Text>
-                </View>
-              </View>
             </View>
-          )}
-        />
-      )}
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -290,32 +154,7 @@ function formatearPrecio(precio: number) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8F3EC" },
-  tabsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 6,
-    gap: 8,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: "#EFE6D8",
-    alignItems: "center",
-  },
-  tabButtonActive: {
-    backgroundColor: "#846B46",
-  },
-  tabButtonText: {
-    color: "#685B4F",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  tabButtonTextActive: {
-    color: "#FFFFFF",
-  },
-  listContent: { paddingHorizontal: 18, paddingBottom: 28 },
+  listContent: { paddingHorizontal: 18, paddingBottom: 28, flexGrow: 1 },
   header: { paddingTop: 14, paddingBottom: 14 },
   eyebrow: {
     color: "#9B7650",
@@ -370,66 +209,15 @@ const styles = StyleSheet.create({
   },
   price: { color: "#563D1B", fontSize: 17, fontWeight: "800" },
   recordNumber: { color: "#8B7457", fontSize: 12, fontWeight: "700" },
-  cardCafe: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E5C4CF",
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  cardCafeHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  cafeNombre: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#6B4234",
-  },
-  cafeDetalle: {
-    color: "#685B4F",
-    fontSize: 13,
-    marginBottom: 3,
-  },
-  cafeBadgeRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 10,
-    flexWrap: "wrap",
-  },
-  badgeCafe: {
-    backgroundColor: "#FCEEE9",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  badgeCafeText: {
-    color: "#844C36",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  badgeMetodo: {
-    backgroundColor: "#F3EFE6",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  badgeMetodoText: {
-    color: "#6B5838",
-    fontSize: 12,
-    fontWeight: "700",
-  },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   loadingText: { color: "#685B4F", fontSize: 14 },
-  empty: { alignItems: "center", paddingTop: 28, paddingHorizontal: 16 },
+  empty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 28,
+    paddingHorizontal: 16,
+  },
   emptyMark: { color: "#846B46", fontSize: 38 },
   emptyTitle: {
     color: "#382B16",
