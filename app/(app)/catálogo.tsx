@@ -37,7 +37,7 @@ async function consultarCatalogo() {
 
   const { data, error } = await supabase
     .from("vitrina_catalogo")
-    .select("codigo, titulo, descripcion, detalle, precio")
+    .select("codigo, titulo, descripcion, detalle, precio, imagen_url")
     .order("codigo", { ascending: true });
 
   if (error) throw error;
@@ -173,6 +173,13 @@ export default function Catalogo() {
                 <Text style={styles.code}>{item.codigo}</Text>
                 {precio ? <Text style={styles.price}>{precio}</Text> : null}
               </View>
+              {item.imagen_url ? (
+                <Image
+                  source={{ uri: item.imagen_url }}
+                  resizeMode="cover"
+                  style={styles.productImage}
+                />
+              ) : null}
               <Text style={styles.cardTitle}>{item.titulo}</Text>
               <Text style={styles.description}>{item.descripcion}</Text>
               <Pressable
@@ -248,7 +255,7 @@ export function DetalleProducto() {
       try {
         const { data, error: consultaError } = await supabase
           .from("vitrina_catalogo")
-          .select("codigo, titulo, descripcion, detalle, precio")
+          .select("codigo, titulo, descripcion, detalle, precio, imagen_url")
           .eq("codigo", codigo)
           .maybeSingle();
 
@@ -294,6 +301,14 @@ export function DetalleProducto() {
         ) : contenido ? (
           <View style={styles.detailCard}>
             <Text style={styles.eyebrow}>COLECCIÓN · {contenido.codigo}</Text>
+            {contenido.imagen_url ? (
+              <Image
+                accessibilityLabel={`Imagen de ${contenido.titulo}`}
+                source={{ uri: contenido.imagen_url }}
+                resizeMode="cover"
+                style={styles.detailProductImage}
+              />
+            ) : null}
             <Text style={styles.detailTitle}>{contenido.titulo}</Text>
 
             <Text style={styles.detailLabel}>Descripción</Text>
@@ -377,6 +392,7 @@ const styles = StyleSheet.create({
     marginBottom: 13,
     padding: 17,
   },
+  productImage: { width: "100%", height: 180, backgroundColor: "#E9DFD1" },
   cardHeading: {
     alignItems: "center",
     flexDirection: "row",
@@ -437,6 +453,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     padding: 22,
+  },
+  detailProductImage: {
+    width: "100%",
+    height: 240,
+    borderRadius: 8,
+    backgroundColor: "#E9DFD1",
+    marginTop: 12,
+    marginBottom: 14,
   },
   detailTitle: {
     color: "#382B16",

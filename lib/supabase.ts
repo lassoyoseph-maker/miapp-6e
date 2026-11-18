@@ -29,11 +29,16 @@ export type VitrinaCatalogoItem = {
   descripcion: string;
   detalle: string;
   precio: number | null;
+  imagen_url: string | null;
 };
 
 type ArticuloVitrinaInsert = Omit<ArticuloVitrina, "id" | "created_at">;
-type VitrinaCatalogoItemInsert = Omit<VitrinaCatalogoItem, "precio"> & {
+type VitrinaCatalogoItemInsert = Omit<
+  VitrinaCatalogoItem,
+  "precio" | "imagen_url"
+> & {
   precio?: number | null;
+  imagen_url?: string | null;
 };
 
 type Database = {

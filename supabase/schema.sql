@@ -13,6 +13,30 @@ create table if not exists public.articulos_vitrina (
   created_at timestamptz not null default now()
 );
 
+-- Colecciones enlazadas desde los códigos QR del catálogo.
+create table if not exists public.vitrina_catalogo (
+  codigo text primary key,
+  titulo text not null,
+  descripcion text not null,
+  detalle text not null,
+  precio numeric,
+  imagen_url text
+);
+
+alter table public.vitrina_catalogo
+  add column if not exists imagen_url text;
+
+insert into public.vitrina_catalogo
+  (codigo, titulo, descripcion, detalle, precio, imagen_url)
+values
+  ('ANT-001', 'Relojes de colección', 'Piezas mecánicas que reúnen precisión, historia y diseño.', 'Explora relojes de bolsillo y de sobremesa elaborados entre los siglos XIX y XX.', 780000, 'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=900'),
+  ('ANT-002', 'Mobiliario clásico', 'Muebles antiguos restaurados con cuidado y materiales tradicionales.', 'La colección incluye sillas, cómodas y mesas con acabados y herrajes de época.', 1280000, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900'),
+  ('ANT-003', 'Arte y pintura', 'Obras decorativas y piezas artísticas de distintas épocas.', 'Cada obra reúne la información disponible sobre su técnica, procedencia y conservación.', 620000, 'https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900'),
+  ('ANT-004', 'Porcelana decorativa', 'Objetos de porcelana y cerámica seleccionados por su valor estético e histórico.', 'Encuentra jarrones, vajillas y figuras ornamentales con detalles artesanales.', 460000, 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=900')
+on conflict (codigo) do update set
+  precio = excluded.precio,
+  imagen_url = excluded.imagen_url;
+
 alter table public.articulos_vitrina enable row level security;
 
 drop policy if exists "permitir insertar articulos vitrina" on public.articulos_vitrina;
