@@ -301,6 +301,7 @@ export function DetalleProducto() {
         ) : contenido ? (
           <View style={styles.detailCard}>
             <Text style={styles.eyebrow}>COLECCIÓN · {contenido.codigo}</Text>
+            <Text style={styles.detailTitle}>{contenido.titulo}</Text>
             {contenido.imagen_url ? (
               <Image
                 accessibilityLabel={`Imagen de ${contenido.titulo}`}
@@ -309,7 +310,6 @@ export function DetalleProducto() {
                 style={styles.detailProductImage}
               />
             ) : null}
-            <Text style={styles.detailTitle}>{contenido.titulo}</Text>
 
             <Text style={styles.detailLabel}>Descripción</Text>
             <Text style={styles.detailText}>{contenido.descripcion}</Text>
