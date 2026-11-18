@@ -364,23 +364,6 @@ export default function Inicio() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.coffeeLink,
-            pressed && styles.pressed,
-          ]}
-          onPress={() =>
-            router.push({
-              pathname: "/registros",
-              params: { tab: "cafe" },
-            })
-          }
-        >
-          <Text style={styles.coffeeLinkText}>
-            ☕ Coffee Lovers (Laboratorio 2)
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
           onPress={() => void cerrarSesion()}
           style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}
         >
@@ -591,17 +574,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   vitrinaLinkText: { color: "#563D1B", fontSize: 13, fontWeight: "700" },
-  coffeeLink: {
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FCEEE9",
-    borderWidth: 1,
-    borderColor: "#E5C4CF",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-  },
-  coffeeLinkText: { color: "#844C36", fontSize: 13, fontWeight: "700" },
   signOut: {
     minHeight: 42,
     alignItems: "center",
