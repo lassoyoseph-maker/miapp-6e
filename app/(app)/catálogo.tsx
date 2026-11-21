@@ -233,12 +233,28 @@ export default function Catalogo() {
 
 export function DetalleProducto() {
   const router = useRouter();
-  const { codigo: parametroCodigo } = useLocalSearchParams<{
+  const {
+    codigo: parametroCodigo,
+    titulo: parametroTitulo,
+    descripcion: parametroDescripcion,
+    detalle: parametroDetalle,
+    precio: parametroPrecio,
+  } = useLocalSearchParams<{
     codigo?: string | string[];
+    titulo?: string | string[];
+    descripcion?: string | string[];
+    detalle?: string | string[];
+    precio?: string | string[];
   }>();
+  const parametroSimple = (valor?: string | string[]) =>
+    Array.isArray(valor) ? valor[0] : valor;
   const codigo = Array.isArray(parametroCodigo)
     ? parametroCodigo[0]
     : parametroCodigo;
+  const tituloQr = parametroSimple(parametroTitulo);
+  const descripcionQr = parametroSimple(parametroDescripcion);
+  const detalleQr = parametroSimple(parametroDetalle);
+  const precioQr = parametroSimple(parametroPrecio);
   const [contenido, setContenido] = useState<VitrinaCatalogoItem | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -253,6 +269,25 @@ export function DetalleProducto() {
 
       if (!codigo) {
         setError("No se recibió el código de la colección.");
+        setCargando(false);
+        return;
+      }
+
+      if (tituloQr && descripcionQr && detalleQr && precioQr !== undefined) {
+        const precio = precioQr === "" ? null : Number(precioQr);
+        if (precioQr !== "" && !Number.isFinite(precio)) {
+          setError("El precio guardado en el QR no es válido.");
+          setCargando(false);
+          return;
+        }
+        setContenido({
+          codigo,
+          titulo: tituloQr,
+          descripcion: descripcionQr,
+          detalle: detalleQr,
+          precio,
+          imagen_url: null,
+        });
         setCargando(false);
         return;
       }
@@ -291,7 +326,7 @@ export function DetalleProducto() {
     return () => {
       vigente = false;
     };
-  }, [codigo]);
+  }, [codigo, tituloQr, descripcionQr, detalleQr, precioQr]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
@@ -344,7 +379,7 @@ export function DetalleProducto() {
                   style={styles.qrImage}
                 />
                 <Text style={styles.qrCaption}>
-                  Este código contiene solo el identificador de la colección.
+                  Este QR incluye el nombre, la descripción, los detalles y el precio del producto.
                 </Text>
               </View>
             ) : null}

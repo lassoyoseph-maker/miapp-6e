@@ -33,9 +33,54 @@ export default function Escaner() {
     setConsultando(true);
     setMensaje("");
 
-    const codigo = data.trim();
+    const contenidoQr = data.trim();
+    let registroQr: {
+      v?: number;
+      codigo?: string;
+      titulo?: string;
+      descripcion?: string;
+      detalle?: string;
+      precio?: number | null;
+      imagen?: string;
+    } | null = null;
+
+    try {
+      const valor = JSON.parse(contenidoQr) as typeof registroQr;
+      if (valor?.v === 1) registroQr = valor;
+    } catch {
+      // Los códigos antiguos contienen solo ANT-00X.
+    }
+
+    const codigo = registroQr?.codigo ?? contenidoQr;
     if (!/^ANT-\d{3}$/.test(codigo)) {
       setMensaje("El QR no contiene un código de colección válido.");
+      setConsultando(false);
+      return;
+    }
+
+    if (registroQr) {
+      if (
+        !registroQr.titulo ||
+        !registroQr.descripcion ||
+        !registroQr.detalle ||
+        registroQr.imagen !== `${codigo}.jpg` ||
+        (registroQr.precio !== null && typeof registroQr.precio !== "number")
+      ) {
+        setMensaje("La información de este QR está incompleta o dañada.");
+        setConsultando(false);
+        return;
+      }
+
+      router.replace({
+        pathname: "/detalle",
+        params: {
+          codigo,
+          titulo: registroQr.titulo,
+          descripcion: registroQr.descripcion,
+          detalle: registroQr.detalle,
+          precio: String(registroQr.precio ?? ""),
+        },
+      });
       setConsultando(false);
       return;
     }
@@ -142,7 +187,7 @@ export default function Escaner() {
           {consultando ? (
             <View style={styles.cameraStatus}>
               <ActivityIndicator color="#FFFFFF" />
-              <Text style={styles.cameraStatusText}>Buscando colección…</Text>
+              <Text style={styles.cameraStatusText}>Leyendo producto…</Text>
             </View>
           ) : null}
         </View>
