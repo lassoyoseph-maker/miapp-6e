@@ -32,6 +32,19 @@ export type VitrinaCatalogoItem = {
   imagen_url: string | null;
 };
 
+export type VitrinaSolicitudCompra = {
+  id: string;
+  articulo_id: number | null;
+  articulo_nombre: string;
+  articulo_categoria: CategoriaArticulo;
+  articulo_precio: number;
+  articulo_epoca: string;
+  usuario_id: string | null;
+  comprador_nombre: string;
+  comprador_telefono: string;
+  created_at: string;
+};
+
 type ArticuloVitrinaInsert = Omit<ArticuloVitrina, "id" | "created_at">;
 type VitrinaCatalogoItemInsert = Omit<
   VitrinaCatalogoItem,
@@ -40,6 +53,10 @@ type VitrinaCatalogoItemInsert = Omit<
   precio?: number | null;
   imagen_url?: string | null;
 };
+type VitrinaSolicitudCompraInsert = Omit<
+  VitrinaSolicitudCompra,
+  "id" | "created_at"
+> & Partial<Pick<VitrinaSolicitudCompra, "id" | "created_at">>;
 
 type Database = {
   public: {
@@ -55,6 +72,12 @@ type Database = {
         Row: VitrinaCatalogoItem;
         Insert: VitrinaCatalogoItemInsert;
         Update: Partial<VitrinaCatalogoItemInsert>;
+        Relationships: [];
+      };
+      vitrina_solicitudes_compra: {
+        Row: VitrinaSolicitudCompra;
+        Insert: VitrinaSolicitudCompraInsert;
+        Update: Partial<VitrinaSolicitudCompraInsert>;
         Relationships: [];
       };
       perfiles_usuario: {

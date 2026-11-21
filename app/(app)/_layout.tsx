@@ -11,6 +11,7 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="inicio" options={{ title: "La Vitrina" }} />
+      <Stack.Screen name="compras" options={{ title: "Mis compras" }} />
       <Stack.Screen
         name="formulario"
         options={{ title: "Registrar artículo" }}

@@ -68,16 +68,13 @@ const initialProducts: Product[] = [
 
 export default function Inicio() {
   const router = useRouter();
-  const [products, setProducts] = useState(initialProducts);
+  const products = initialProducts;
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category>("Todos");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showSellForm, setShowSellForm] = useState(false);
   const [buyerName, setBuyerName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState("");
 
   const visibleProducts = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -135,6 +132,14 @@ export default function Inicio() {
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
       if (sessionError) throw sessionError;
+      const usuarioId = sessionData.session?.user.id;
+      if (!usuarioId) {
+        Alert.alert(
+          "Inicia sesión",
+          "Vuelve a iniciar sesión para guardar la solicitud en tus compras.",
+        );
+        return;
+      }
 
       const { error } = await supabase
         .from("vitrina_solicitudes_compra")
@@ -144,17 +149,24 @@ export default function Inicio() {
           articulo_categoria: selectedProduct.category,
           articulo_precio: precio,
           articulo_epoca: selectedProduct.period,
-          usuario_id: sessionData.session?.user.id ?? null,
+          usuario_id: usuarioId,
           comprador_nombre: nombre,
           comprador_telefono: telefono,
         });
       if (error) throw error;
 
+      closePurchase();
       Alert.alert(
         "Solicitud enviada",
-        "Gracias, " + nombre + ". Te contactaremos pronto.",
+        `Gracias, ${nombre}. El artículo ya aparece en Compras.`,
+        [
+          {
+            text: "Ver compras",
+            onPress: () => router.push("/compras"),
+          },
+          { text: "Seguir explorando", style: "cancel" },
+        ],
       );
-      closePurchase();
     } catch (error) {
       Alert.alert(
         "No se pudo guardar la solicitud",
@@ -165,49 +177,6 @@ export default function Inicio() {
     } finally {
       setEnviandoSolicitud(false);
     }
-  }
-
-  async function publishProduct() {
-    if (!newName.trim() || !newPrice.trim()) {
-      Alert.alert("Datos incompletos", "Escribe el nombre y el precio.");
-      return;
-    }
-    const cleanPrice = Number(newPrice.replace(/[^\d]/g, "")) || 450000;
-    const defaultImage =
-      "https://images.unsplash.com/photo-1577083288073-40892c0860a4?w=900";
-
-    if (supabase) {
-      try {
-        await supabase.from("articulos_vitrina").insert({
-          nombre: newName.trim(),
-          categoria: "Decoración",
-          precio: cleanPrice,
-          epoca: "Por verificar",
-          imagen_url: defaultImage,
-        });
-      } catch (err) {
-        console.log("Error guardando en Supabase:", err);
-      }
-    }
-
-    setProducts((current) => [
-      {
-        id: Date.now(),
-        name: newName.trim(),
-        category: "Decoración",
-        price: `$${cleanPrice.toLocaleString("es-CO")}`,
-        period: "Por verificar",
-        image: defaultImage,
-      },
-      ...current,
-    ]);
-    setNewName("");
-    setNewPrice("");
-    setShowSellForm(false);
-    Alert.alert(
-      "Artículo publicado",
-      "El artículo se guardó en Supabase y ya aparece en el catálogo.",
-    );
   }
 
   async function cerrarSesion() {
@@ -231,10 +200,10 @@ export default function Inicio() {
             </Text>
           </View>
           <Pressable
-            style={styles.sellButton}
-            onPress={() => setShowSellForm(true)}
+            style={styles.comprasButton}
+            onPress={() => router.push("/compras")}
           >
-            <Text style={styles.sellButtonText}>+ Vender</Text>
+            <Text style={styles.comprasButtonText}>Compras</Text>
           </Pressable>
         </View>
 
@@ -417,41 +386,6 @@ export default function Inicio() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showSellForm}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowSellForm(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Publicar artículo</Text>
-              <Pressable onPress={() => setShowSellForm(false)}>
-                <Text style={styles.close}>X</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.label}>Nombre del artículo</Text>
-            <TextInput
-              style={styles.input}
-              value={newName}
-              onChangeText={setNewName}
-              placeholder="Ej. Lámpara vintage"
-            />
-            <Text style={styles.label}>Precio</Text>
-            <TextInput
-              style={styles.input}
-              value={newPrice}
-              onChangeText={setNewPrice}
-              placeholder="450000"
-              keyboardType="numeric"
-            />
-            <Pressable style={styles.primaryButton} onPress={publishProduct}>
-              <Text style={styles.primaryButtonText}>Publicar</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -472,13 +406,13 @@ const styles = StyleSheet.create({
   },
   title: { color: "#2B2218", fontSize: 36, fontWeight: "800", marginTop: 4 },
   subtitle: { color: "#685B4F", fontSize: 15, marginTop: 3 },
-  sellButton: {
+  comprasButton: {
     backgroundColor: "#846B46",
     borderRadius: 12,
     paddingHorizontal: 13,
     paddingVertical: 11,
   },
-  sellButtonText: { color: "#FFFFFF", fontWeight: "800" },
+  comprasButtonText: { color: "#FFFFFF", fontWeight: "800" },
   search: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
