@@ -20,13 +20,6 @@ import {
   supabaseConfigError,
 } from "@/lib/supabase";
 
-const imagenesQr: Record<string, ImageSourcePropType> = {
-  "ANT-001": require("../../assets/qr/ANT-001.png"),
-  "ANT-002": require("../../assets/qr/ANT-002.png"),
-  "ANT-003": require("../../assets/qr/ANT-003.png"),
-  "ANT-004": require("../../assets/qr/ANT-004.png"),
-};
-
 const imagenesProducto: Record<string, ImageSourcePropType> = {
   "ANT-001": require("../../assets/productos/ANT-001.jpg"),
   "ANT-002": require("../../assets/productos/ANT-002.jpg"),
@@ -369,21 +362,6 @@ export function DetalleProducto() {
             <Text style={styles.detailLabel}>Especificaciones</Text>
             <Text style={styles.detailText}>{contenido.detalle}</Text>
 
-            {imagenesQr[contenido.codigo] ? (
-              <View style={styles.qrSection}>
-                <Text style={styles.detailLabel}>Código QR de la colección</Text>
-                <Image
-                  accessibilityLabel={`Código QR para ${contenido.codigo}`}
-                  source={imagenesQr[contenido.codigo]}
-                  resizeMode="contain"
-                  style={styles.qrImage}
-                />
-                <Text style={styles.qrCaption}>
-                  Este QR incluye el nombre, la descripción, los detalles y el precio del producto.
-                </Text>
-              </View>
-            ) : null}
-
             {contenido.precio !== null ? (
               <>
                 <View style={styles.divider} />
@@ -525,15 +503,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   detailText: { color: "#5F574A", fontSize: 15, lineHeight: 24, marginTop: 7 },
-  qrSection: { alignItems: "center", marginTop: 20 },
-  qrImage: { height: 190, marginTop: 10, width: 190 },
-  qrCaption: {
-    color: "#756B5D",
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 6,
-    textAlign: "center",
-  },
   detailPrice: {
     color: "#846B46",
     fontSize: 22,
