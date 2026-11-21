@@ -330,7 +330,7 @@ export default function Inicio() {
         </View>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push("/catálogo")}
+          onPress={() => router.push("/catalogo")}
           style={({ pressed }) => [
             styles.vitrinaLink,
             pressed && styles.pressed,

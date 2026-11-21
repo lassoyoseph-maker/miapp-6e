@@ -17,6 +17,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase, supabaseConfigError } from "@/lib/supabase";
 
+type ProductoQr = {
+  v: 1;
+  codigo: string;
+  titulo: string;
+  descripcion: string;
+  detalle: string;
+  precio: number | null;
+  imagen: string;
+};
+
 export default function Escaner() {
   const router = useRouter();
   const [permiso, solicitarPermiso] = useCameraPermissions();
@@ -34,19 +44,18 @@ export default function Escaner() {
     setMensaje("");
 
     const contenidoQr = data.trim();
-    let registroQr: {
-      v?: number;
-      codigo?: string;
-      titulo?: string;
-      descripcion?: string;
-      detalle?: string;
-      precio?: number | null;
-      imagen?: string;
-    } | null = null;
+    let registroQr: ProductoQr | null = null;
 
     try {
-      const valor = JSON.parse(contenidoQr) as typeof registroQr;
-      if (valor?.v === 1) registroQr = valor;
+      const valor: unknown = JSON.parse(contenidoQr);
+      if (
+        valor &&
+        typeof valor === "object" &&
+        "v" in valor &&
+        valor.v === 1
+      ) {
+        registroQr = valor as ProductoQr;
+      }
     } catch {
       // Los códigos antiguos contienen solo ANT-00X.
     }

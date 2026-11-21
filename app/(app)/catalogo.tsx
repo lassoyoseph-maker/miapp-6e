@@ -398,7 +398,7 @@ export function DetalleProducto() {
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.replace("/catálogo")}
+          onPress={() => router.replace("/catalogo")}
           style={({ pressed }) => [
             styles.backButton,
             pressed && styles.pressed,

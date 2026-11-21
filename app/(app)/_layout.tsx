@@ -24,7 +24,7 @@ export default function AppLayout() {
         options={{ title: "Artículos de La Vitrina" }}
       />
       <Stack.Screen name="imagenes" options={{ title: "Galería" }} />
-      <Stack.Screen name="catálogo" options={{ title: "Catálogo" }} />
+      <Stack.Screen name="catalogo" options={{ title: "Catálogo" }} />
       <Stack.Screen
         name="detalle"
         options={{ title: "Detalle del producto" }}
